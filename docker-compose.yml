@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # MongoDB
+  mongo:
+    image: mongo:7
+    container_name: zenithos_mongo
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: zenithos
+    networks:
+      - zenithos_net
+
+  # Backend API
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: zenithos_api
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: production
+      MONGODB_URI: mongodb://mongo:27017/zenithos
+      PORT: 5000
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+    networks:
+      - zenithos_net
+
+  # Frontend (Nginx)
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    container_name: zenithos_client
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - server
+    networks:
+      - zenithos_net
+
+volumes:
+  mongo_data:
+
+networks:
+  zenithos_net:
+    driver: bridge
