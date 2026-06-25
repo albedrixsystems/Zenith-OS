@@ -7,6 +7,7 @@ import type { ProjectStatus, Project } from '../types'
 import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
+import { useLanguage } from '../context/LanguageContext'
 
 const STATUS_FILTERS: { label: string; value: ProjectStatus | 'all' }[] = [
   { label: 'All', value: 'all' },
@@ -28,6 +29,7 @@ export default function ProjectsPage() {
   const { user } = useAuth()
   const isAdmin = user?.role === 'super_admin'
   const toast = useToast()
+  const { t } = useLanguage()
 
   const [projects, setProjects] = useState<Project[]>([])
   const [clients, setClients] = useState<any[]>([])
@@ -216,14 +218,14 @@ export default function ProjectsPage() {
   })
 
   return (
-    <Layout title="Projects">
+    <Layout title={t('projects')}>
       <div className="page-header flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="page-title">Projects</h1>
-          <p className="page-subtitle">{projects.filter(p => p.status === 'active').length} active &middot; {projects.length} total</p>
+          <h1 className="page-title">{t('projects')}</h1>
+          <p className="page-subtitle">{projects.filter(p => p.status === 'active').length} {t('activeClientsDesc')} &middot; {projects.length} {t('totalClientsDesc')}</p>
         </div>
         <button className="btn-primary flex items-center gap-2 cursor-pointer" onClick={() => setShowAdd(true)}>
-          <Plus size={16} /> New Project
+          <Plus size={16} /> {t('newProject')}
         </button>
       </div>
 
@@ -231,13 +233,13 @@ export default function ProjectsPage() {
       <div className="flex flex-wrap items-center gap-3 mb-6">
         <div className="relative flex-1 min-w-48 max-w-sm">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search projects..." className="input pl-9 py-2" />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t('searchProjects')} className="input pl-9 py-2" />
         </div>
         <div className="flex gap-1 bg-slate-100 rounded-xl p-1 flex-wrap">
           {STATUS_FILTERS.map(f => (
             <button key={f.value} onClick={() => setStatusFilter(f.value)}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all cursor-pointer ${statusFilter === f.value ? 'bg-white text-navy-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-              {f.label}
+              {t(f.value.toLowerCase()) || f.label}
             </button>
           ))}
         </div>
@@ -264,7 +266,7 @@ export default function ProjectsPage() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <EmptyState icon="📁" title="No projects found" description="Create your first project to get started." action={<button className="btn-primary cursor-pointer" onClick={() => setShowAdd(true)}><Plus size={15} /> New Project</button>} />
+        <EmptyState icon="📁" title={t('noProjectsFound') || 'No projects found'} description={t('onboardingProjectDesc')} action={<button className="btn-primary cursor-pointer" onClick={() => setShowAdd(true)}><Plus size={15} /> {t('newProject')}</button>} />
       ) : (
         <div className="space-y-3">
           {filtered.map(project => {
@@ -310,10 +312,10 @@ export default function ProjectsPage() {
                     {/* Top Row - Budget, Tasks, Deadline */}
                     <div className="flex items-center gap-6">
 
-                      <div className="text-center min-w-[80px]">
+                       <div className="text-center min-w-[80px]">
                         <div className="flex items-center justify-center gap-1 text-xs text-slate-500 mb-0.5">
                           <IndianRupee size={11} />
-                          <span>Budget</span>
+                          <span>{t('budget')}</span>
                         </div>
                         <p className="text-sm font-semibold text-navy-900">
                           {formatCurrency(project.budget)}
@@ -323,7 +325,7 @@ export default function ProjectsPage() {
                       <div className="text-center min-w-[60px]">
                         <div className="flex items-center justify-center gap-1 text-xs text-slate-500 mb-0.5">
                           <CheckSquare size={11} />
-                          <span>Tasks</span>
+                          <span>{t('tasks')}</span>
                         </div>
                         <p className="text-sm font-semibold text-navy-900">
                           {project.completedTasks}/{project.taskCount}
@@ -333,7 +335,7 @@ export default function ProjectsPage() {
                       <div className="text-center min-w-[90px]">
                         <div className="flex items-center justify-center gap-1 text-xs text-slate-500 mb-0.5">
                           <Calendar size={11} />
-                          <span>Deadline</span>
+                          <span>{t('deadline')}</span>
                         </div>
                         <p
                           className={`text-sm font-semibold ${
@@ -345,8 +347,8 @@ export default function ProjectsPage() {
                           }`}
                         >
                           {overdue
-                            ? `${Math.abs(daysLeft)}d overdue`
-                            : `${daysLeft}d left`}
+                            ? `${Math.abs(daysLeft)}${t('daysOverdue')}`
+                            : `${daysLeft}${t('daysLeft')}`}
                         </p>
                       </div>
 
@@ -354,7 +356,7 @@ export default function ProjectsPage() {
                         <button
                           onClick={(e) => triggerDeleteProject(e, project.id)}
                           className="btn-ghost p-1.5 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded cursor-pointer"
-                          title="Delete Project"
+                          title={t('delete') || "Delete Project"}
                         >
                           <Trash size={16} />
                         </button>
@@ -389,89 +391,89 @@ export default function ProjectsPage() {
       )}
 
       {/* Add Project Modal */}
-      <Modal open={showAdd} onClose={() => { setShowAdd(false); setFormSubmitted(false); }} title="Create New Project" size="lg">
+      <Modal open={showAdd} onClose={() => { setShowAdd(false); setFormSubmitted(false); }} title={t('createProject')} size="lg">
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Project Name *</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">{t('projectName')} *</label>
             <input
               className={`input text-sm py-2 ${formSubmitted && !projectName ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/10' : ''}`}
               placeholder="Brand Identity Redesign"
               value={projectName}
               onChange={e => setProjectName(e.target.value)}
             />
-            {formSubmitted && !projectName && <p className="text-[10px] text-rose-500 mt-1">Project name is required</p>}
+            {formSubmitted && !projectName && <p className="text-[10px] text-rose-500 mt-1">{t('projectNameIsRequired') || 'Project name is required'}</p>}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Client *</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">{t('clients')} *</label>
               <select
                 className={`input text-sm py-2 ${formSubmitted && !selectedClientIdForNewProject ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/10' : ''}`}
                 value={selectedClientIdForNewProject}
                 onChange={e => setSelectedClientIdForNewProject(e.target.value)}
               >
-                <option value="">Select client...</option>
+                <option value="">{t('selectClient')}</option>
                 {clients.map(client => (
                   <option key={client.id} value={client.id}>{client.companyName}</option>
                 ))}
               </select>
-              {formSubmitted && !selectedClientIdForNewProject && <p className="text-[10px] text-rose-500 mt-1">Client is required</p>}
+              {formSubmitted && !selectedClientIdForNewProject && <p className="text-[10px] text-rose-500 mt-1">{t('clientIsRequired') || 'Client is required'}</p>}
             </div>
 
             {/* New Assigned User dropdown */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Assigned User *</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">{t('assignedUser')} *</label>
               <select
                 className={`input text-sm py-2 ${formSubmitted && !assignedUser ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/10' : ''}`}
                 value={assignedUser}
                 onChange={e => setAssignedUser(e.target.value)}
               >
-                <option value="">Select responsible user...</option>
+                <option value="">{t('selectResponsibleUser')}</option>
                 {usersList.map(u => (
                   <option key={u.id} value={u.id}>{u.name} ({u.role.replace('_', ' ')})</option>
                 ))}
               </select>
-              {formSubmitted && !assignedUser && <p className="text-[10px] text-rose-500 mt-1">Responsible user assignment is required</p>}
+              {formSubmitted && !assignedUser && <p className="text-[10px] text-rose-500 mt-1">{t('assignedUserIsRequired') || 'Responsible user assignment is required'}</p>}
             </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Description</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">{t('description')}</label>
             <textarea className="input h-20 resize-none text-sm py-2" placeholder="Brief description of the project scope..." value={description} onChange={e => setDescription(e.target.value)} />
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Start Date</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">{t('startDate')}</label>
               <input type="date" className="input text-sm py-2" value={startDate} onChange={e => setStartDate(e.target.value)} />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Deadline</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">{t('deadline')}</label>
               <input type="date" className="input text-sm py-2" value={deadline} onChange={e => setDeadline(e.target.value)} />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Budget (₹)</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">{t('budget')} (₹)</label>
               <input type="number" className="input text-sm py-2" placeholder="100000" value={budget} onChange={e => setBudget(e.target.value)} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Default Tax Rate (%)</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">{t('defaultTaxRate')} (%)</label>
               <input type="number" className="input text-sm py-2" placeholder="18" value={defaultTaxRate} onChange={e => setDefaultTaxRate(Number(e.target.value) || 0)} />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Default Discount Rate (%)</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">{t('defaultDiscountRate')} (%)</label>
               <input type="number" className="input text-sm py-2" placeholder="0" value={defaultDiscountRate} onChange={e => setDefaultDiscountRate(Number(e.target.value) || 0)} />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Status</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">{t('status')}</label>
             <select className="input text-sm py-2" value={status} onChange={e => setStatus(e.target.value as ProjectStatus)}>
-              <option value="draft">Draft</option>
-              <option value="active">Active</option>
+              <option value="draft">{t('draft')}</option>
+              <option value="active">{t('active')}</option>
             </select>
           </div>
           <div className="flex gap-3 pt-2">
-            <button className="btn-secondary flex-1 cursor-pointer" onClick={() => setShowAdd(false)}>Cancel</button>
+            <button className="btn-secondary flex-1 cursor-pointer" onClick={() => setShowAdd(false)}>{t('cancel')}</button>
             <button className="btn-primary flex-1 justify-center cursor-pointer" onClick={handleCreateProject}>
-              <Plus size={15} /> Create Project
+              <Plus size={15} /> {t('createProject')}
             </button>
           </div>
         </div>
@@ -480,7 +482,7 @@ export default function ProjectsPage() {
       {/* Bulk Action floating controls */}
       {selectedIds.length > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-4 animate-slide-up border border-slate-800">
-          <span className="text-xs font-semibold">{selectedIds.length} selected</span>
+          <span className="text-xs font-semibold">{selectedIds.length} {t('selected')}</span>
           <div className="w-px h-4 bg-slate-700" />
           <button
             onClick={() => {
@@ -507,19 +509,19 @@ export default function ProjectsPage() {
             }}
             className="text-xs font-bold text-orange-400 hover:text-orange-300 transition-colors cursor-pointer"
           >
-            Export CSV
+            {t('exportCsv')}
           </button>
           <button
             onClick={triggerBulkDelete}
             className="text-xs font-bold text-rose-400 hover:text-rose-300 transition-colors cursor-pointer"
           >
-            Delete
+            {t('delete')}
           </button>
           <button
             onClick={() => setSelectedIds([])}
             className="text-xs font-bold text-slate-400 hover:text-slate-300 transition-colors cursor-pointer"
           >
-            Cancel
+            {t('cancel')}
           </button>
         </div>
       )}
@@ -529,14 +531,14 @@ export default function ProjectsPage() {
         open={confirmDeleteOpen}
         onClose={() => setConfirmDeleteOpen(false)}
         onConfirm={handleConfirmDelete}
-        title={pendingBulkDelete ? "Delete Multiple Projects?" : "Delete Project?"}
+        title={pendingBulkDelete ? t('deleteMultipleProjects') : t('deleteProjectTitle')}
         message={
           pendingBulkDelete 
-            ? `Are you sure you want to permanently delete these ${selectedIds.length} selected projects? This action is destructive and cannot be undone.`
-            : "Are you sure you want to permanently delete this project? This action is destructive and cannot be undone."
+            ? t('deleteMultipleProjectsDesc')
+            : t('deleteProjectDesc')
         }
-        confirmText="Delete"
-        cancelText="Cancel"
+        confirmText={t('delete')}
+        cancelText={t('cancel')}
         variant="danger"
       />
     </Layout>

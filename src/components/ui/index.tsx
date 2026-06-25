@@ -24,7 +24,7 @@ export function Badge({ children, variant = 'default', size = 'md' }: BadgeProps
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full font-semibold ${sizes[size]} ${variants[variant]}`}
+      className={`inline-flex items-center gap-1 rounded-full font-semibold whitespace-nowrap ${sizes[size]} ${variants[variant]}`}
       style={variant === 'brand' ? { background: 'linear-gradient(135deg, #F4511E, #FF8C42)' } : undefined}
     >
       {children}
@@ -80,11 +80,16 @@ export function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {
 
 export function ApprovalStatusBadge({ status }: { status: ApprovalStatus }) {
   const map: Record<ApprovalStatus, { label: string; variant: BadgeProps['variant'] }> = {
+    draft: { label: 'Draft', variant: 'default' },
     pending_review: { label: 'Pending Review', variant: 'warning' },
+    pending_client_approval: { label: 'Pending Client Approval', variant: 'warning' },
+    pending_admin_approval: { label: 'Pending Admin Approval', variant: 'warning' },
     approved: { label: 'Approved', variant: 'success' },
+    rejected: { label: 'Rejected', variant: 'danger' },
     revision_requested: { label: 'Revision Requested', variant: 'danger' },
+    cancelled: { label: 'Cancelled', variant: 'default' },
   }
-  const { label, variant } = map[status]
+  const { label, variant } = map[status] || { label: 'Unknown', variant: 'default' }
   return <Badge variant={variant}>{label}</Badge>
 }
 

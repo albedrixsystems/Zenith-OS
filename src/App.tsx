@@ -22,6 +22,16 @@ import SettingsPage from './pages/SettingsPage'
 import ClientPortalPage from './pages/ClientPortalPage'
 import ProposalsPage from './pages/ProposalsPage'
 import ContractsPage from './pages/ContractsPage'
+import PortalProjectsPage from './pages/portal/PortalProjectsPage'
+import PortalTasksPage from './pages/portal/PortalTasksPage'
+import PortalFilesPage from './pages/portal/PortalFilesPage'
+import PortalApprovalsPage from './pages/portal/PortalApprovalsPage'
+import PortalProposalsPage from './pages/portal/PortalProposalsPage'
+import PortalContractsPage from './pages/portal/PortalContractsPage'
+import PortalInvoicesPage from './pages/portal/PortalInvoicesPage'
+import PortalSupportPage from './pages/portal/PortalSupportPage'
+import PortalProfilePage from './pages/portal/PortalProfilePage'
+import SupportTicketsPage from './pages/SupportTicketsPage'
 import { LanguageProvider } from './context/LanguageContext'
 
 const queryClient = new QueryClient({
@@ -93,7 +103,6 @@ function AppRoutes() {
       <Route path="/files" element={<ProtectedRoute><FilesPage /></ProtectedRoute>} />
       <Route path="/files/:id/metadata" element={<ProtectedRoute><FileMetadataPage /></ProtectedRoute>} />
       <Route path="/approvals" element={<ProtectedRoute><ApprovalsPage /></ProtectedRoute>} />
-      <Route path="/proposals" element={<ProtectedRoute><ProposalsPage /></ProtectedRoute>} />
       <Route path="/contracts" element={<ProtectedRoute><ContractsPage /></ProtectedRoute>} />
       <Route path="/invoices" element={<ProtectedRoute><InvoicesPage /></ProtectedRoute>} />
       <Route path="/invoices/create" element={<ProtectedRoute><InvoiceCreatePage /></ProtectedRoute>} />
@@ -102,16 +111,19 @@ function AppRoutes() {
       <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
       <Route path="/activity" element={<ProtectedRoute><ActivityPage /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+      <Route path="/support" element={<ProtectedRoute><SupportTicketsPage /></ProtectedRoute>} />
 
       {/* Client Portal */}
       <Route path="/portal" element={<ProtectedRoute><ClientPortalPage /></ProtectedRoute>} />
-      <Route path="/portal/projects" element={<ProtectedRoute><ProjectsPage /></ProtectedRoute>} />
-      <Route path="/portal/files" element={<ProtectedRoute><FilesPage /></ProtectedRoute>} />
+      <Route path="/portal/projects" element={<ProtectedRoute><PortalProjectsPage /></ProtectedRoute>} />
+      <Route path="/portal/tasks" element={<ProtectedRoute><PortalTasksPage /></ProtectedRoute>} />
+      <Route path="/portal/files" element={<ProtectedRoute><PortalFilesPage /></ProtectedRoute>} />
       <Route path="/portal/files/:id/metadata" element={<ProtectedRoute><FileMetadataPage /></ProtectedRoute>} />
-      <Route path="/portal/approvals" element={<ProtectedRoute><ApprovalsPage /></ProtectedRoute>} />
-      <Route path="/portal/proposals" element={<ProtectedRoute><ProposalsPage /></ProtectedRoute>} />
-      <Route path="/portal/contracts" element={<ProtectedRoute><ContractsPage /></ProtectedRoute>} />
-      <Route path="/portal/invoices" element={<ProtectedRoute><InvoicesPage /></ProtectedRoute>} />
+      <Route path="/portal/approvals" element={<ProtectedRoute><PortalApprovalsPage /></ProtectedRoute>} />
+      <Route path="/portal/contracts" element={<ProtectedRoute><PortalContractsPage /></ProtectedRoute>} />
+      <Route path="/portal/invoices" element={<ProtectedRoute><PortalInvoicesPage /></ProtectedRoute>} />
+      <Route path="/portal/support" element={<ProtectedRoute><PortalSupportPage /></ProtectedRoute>} />
+      <Route path="/portal/profile" element={<ProtectedRoute><PortalProfilePage /></ProtectedRoute>} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

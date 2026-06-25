@@ -136,8 +136,20 @@ const approvalSchema = new mongoose.Schema({
   projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true },
   clientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Client', required: true },
   requestedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  assignedApproverId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   fileIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'File' }],
-  status: { type: String, enum: ['pending_review', 'approved', 'revision_requested'], default: 'pending_review' },
+  status: { type: String, enum: ['draft', 'pending_review', 'pending_client_approval', 'pending_admin_approval', 'approved', 'rejected', 'revision_requested', 'cancelled'], default: 'pending_review' },
+  requestType: { type: String, required: true },
+  priority: { type: String, enum: ['low', 'medium', 'high', 'critical'], default: 'medium' },
+  dueDate: Date,
+  history: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    userName: String,
+    action: String,
+    comments: String,
+    status: String,
+    createdAt: { type: Date, default: Date.now }
+  }],
   clientComment: String,
   respondedAt: Date,
   signatureText: String,
@@ -220,7 +232,7 @@ paymentSchema.index({ clientId: 1 })
 // ── Notification ──────────────────────────────────────────
 const notificationSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  type: { type: String, enum: ['client_added', 'project_assigned', 'approval_requested', 'invoice_generated', 'payment_received', 'deadline_approaching'], required: true },
+  type: { type: String, enum: ['client_added', 'project_assigned', 'approval_requested', 'invoice_generated', 'payment_received', 'deadline_approaching', 'approval_status_updated', 'approval_comment_added'], required: true },
   title: { type: String, required: true },
   message: String,
   read: { type: Boolean, default: false },
@@ -325,6 +337,33 @@ const contractSchema = new mongoose.Schema({
   notes: String,
 }, { timestamps: true })
 
+// ── Support Ticket ───────────────────────────────────
+const supportTicketSchema = new mongoose.Schema({
+  clientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Client', required: true },
+  subject: { type: String, required: true },
+  description: { type: String, required: true },
+  priority: { type: String, enum: ['low', 'medium', 'high'], default: 'medium' },
+  status: { type: String, enum: ['open', 'in_progress', 'resolved', 'closed'], default: 'open' },
+  messages: [{
+    senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    senderName: { type: String, required: true },
+    message: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now }
+  }]
+}, { timestamps: true })
+
+// ── Client Proposal / Project Request ────────────────
+const clientProposalSchema = new mongoose.Schema({
+  clientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Client', required: true },
+  title: { type: String, required: true },
+  description: { type: String, required: true },
+  type: { type: String, enum: ['new_project', 'change_request', 'enhancement', 'creative'], default: 'new_project' },
+  status: { type: String, enum: ['pending', 'reviewed', 'approved', 'rejected'], default: 'pending' },
+  adminComment: { type: String, default: '' },
+  estimatedBudget: { type: Number, default: 0 },
+  submittedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
+}, { timestamps: true })
+
 module.exports = {
   User: mongoose.model('User', userSchema),
   Client: mongoose.model('Client', clientSchema),
@@ -342,4 +381,7 @@ module.exports = {
   RecurringInvoiceTemplate: mongoose.model('RecurringInvoiceTemplate', recurringInvoiceTemplateSchema),
   Proposal: mongoose.model('Proposal', proposalSchema),
   Contract: mongoose.model('Contract', contractSchema),
+  SupportTicket: mongoose.model('SupportTicket', supportTicketSchema),
+  ClientProposal: mongoose.model('ClientProposal', clientProposalSchema),
 }
+

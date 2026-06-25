@@ -5,12 +5,13 @@ import {
 } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { Layout } from '../components/layout/Layout'
-import { StatCard, Avatar, ProjectStatusBadge, InvoiceStatusBadge, Skeleton } from '../components/ui/index'
+import { StatCard, Avatar, ProjectStatusBadge, InvoiceStatusBadge, Skeleton, ApprovalStatusBadge } from '../components/ui/index'
 import { Progress } from '../components/ui/index'
 import { formatCurrency, formatRelativeTime } from '../lib/utils'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import api from '../lib/api'
+import { useLanguage } from '../context/LanguageContext'
 
 const pieData = [
   { name: 'Active', value: 4, color: '#06B6D4' },
@@ -44,6 +45,7 @@ const DEFAULT_CONFIG: DashboardConfig = {
     { id: 'active_projects', name: 'Active Projects', span: 'lg:col-span-2', visible: true },
     { id: 'recent_activity', name: 'Recent Activity', span: 'lg:col-span-1', visible: true },
     { id: 'overdue_invoices', name: 'Overdue Invoices Alert', span: 'lg:col-span-3', visible: true },
+    { id: 'approvals_pipeline', name: 'Approvals Pipeline', span: 'lg:col-span-3', visible: true },
   ],
   stats: [
     { id: 'clients', label: 'Total Clients', visible: true },
@@ -245,9 +247,76 @@ function StatCardEditorWrapper({
   )
 }
  
+function ApprovalsPipelineWidget({ pendingClient, pendingInternal, recentlyApproved }: { pendingClient: any[], pendingInternal: any[], recentlyApproved: any[] }) {
+  const [tab, setTab] = useState<'pending_client' | 'pending_internal' | 'recently_approved'>('pending_client')
+  
+  const list = 
+    tab === 'pending_client' ? pendingClient :
+    tab === 'pending_internal' ? pendingInternal : recentlyApproved
+
+  const tabLabels = {
+    pending_client: `Pending Client (${pendingClient.length})`,
+    pending_internal: `Pending Internal (${pendingInternal.length})`,
+    recently_approved: `Recently Approved (${recentlyApproved.length})`
+  }
+
+  return (
+    <div className="card p-5 space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+        <div>
+          <h2 className="section-title">Approvals Pipeline</h2>
+          <p className="text-xs text-slate-500 mt-0.5">Track deliverables sign-offs and creative project requests</p>
+        </div>
+        
+        {/* Tab switcher */}
+        <div className="flex gap-1 bg-slate-100 rounded-lg p-0.5 text-[11px] w-fit">
+          {(['pending_client', 'pending_internal', 'recently_approved'] as const).map(t => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTab(t)}
+              className={`px-2.5 py-1 rounded font-semibold transition-all cursor-pointer ${tab === t ? 'bg-white text-navy-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              {tabLabels[t]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {list.length === 0 ? (
+        <div className="text-center py-6 text-xs text-slate-400">No approvals in this queue</div>
+      ) : (
+        <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+          {list.map(a => (
+            <div key={a.id} className="flex items-center justify-between gap-4 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100/80 transition-colors border border-slate-100">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold text-navy-900 truncate">{a.title}</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  {a.clientName} &middot; {a.projectName}
+                </p>
+              </div>
+              <div className="flex items-center gap-3.5 flex-shrink-0">
+                <div className="text-right hidden sm:block">
+                  <p className="text-[10px] text-slate-400">By {a.requestedByName}</p>
+                  <p className="text-[9px] text-slate-400 mt-0.5">{formatRelativeTime(a.updatedAt)}</p>
+                </div>
+                <ApprovalStatusBadge status={a.status} />
+                <a href="/approvals" className="text-xs font-bold text-orange-600 hover:underline">
+                  View
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function DashboardPage() {
   const { user } = useAuth()
   const toast = useToast()
+  const { t } = useLanguage()
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [months, setMonths] = useState<number>(6)
@@ -358,7 +427,7 @@ export default function DashboardPage() {
  
   if (loading && !isEditing) {
     return (
-      <Layout title="Dashboard">
+      <Layout title={t('dashboard')}>
         <div className="page-header">
           <Skeleton className="h-8 w-48 mb-2" />
           <Skeleton className="h-4 w-72" />
@@ -377,12 +446,12 @@ export default function DashboardPage() {
   }
 
   return (
-    <Layout title="Dashboard">
+    <Layout title={t('dashboard')}>
       {/* Welcome & Action Controls */}
       <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="page-title">Good morning, {user?.name?.split(' ')[0]} 👋</h1>
-          <p className="page-subtitle">Here's what's happening at Zenith Creative today.</p>
+          <h1 className="page-title">{t('goodMorning')}, {user?.name?.split(' ')[0]} 👋</h1>
+          <p className="page-subtitle">{t('dashboardSubtitle')}</p>
         </div>
         
         {/* Only show Edit Dashboard button to administrator */}
@@ -391,7 +460,7 @@ export default function DashboardPage() {
             onClick={() => setIsEditing(true)}
             className="btn-secondary self-start sm:self-auto"
           >
-            <span>✏️</span> Edit Dashboard
+            <span>✏️</span> {t('editDashboard')}
           </button>
         )}
       </div>
@@ -403,9 +472,9 @@ export default function DashboardPage() {
           <div className="flex items-start justify-between gap-4 mb-4">
             <div>
               <h2 className="text-base font-bold text-white flex items-center gap-2">
-                🚀 Welcome to ZenithOS!
+                🚀 {t('welcomeTitle')}
               </h2>
-              <p className="text-xs text-slate-400 mt-1">Get started by completing these quick steps to explore the platform.</p>
+              <p className="text-xs text-slate-400 mt-1">{t('onboardingDesc')}</p>
             </div>
             <button
               onClick={() => {
@@ -414,22 +483,22 @@ export default function DashboardPage() {
               }}
               className="text-xs text-slate-400 hover:text-white underline cursor-pointer"
             >
-              Dismiss
+              {t('dismiss')}
             </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { title: 'Add a Client', desc: 'Create your first CRM client entry.', link: '/clients' },
-              { title: 'Define a Project', desc: 'Assign work, team, and budget.', link: '/projects' },
-              { title: 'Issue an Invoice', desc: 'Bill client and set due dates.', link: '/invoices' },
-              { title: 'Check Client Portal', desc: 'Login as client@novatech.com.', link: '/portal' },
+              { title: t('addClient'), desc: t('onboardingClientDesc'), link: '/clients' },
+              { title: t('defineProject'), desc: t('onboardingProjectDesc'), link: '/projects' },
+              { title: t('issueInvoice'), desc: t('onboardingInvoiceDesc'), link: '/invoices' },
+              { title: t('checkClientPortal'), desc: t('onboardingPortalDesc'), link: '/portal' },
             ].map((step, idx) => (
               <a
                 key={idx}
                 href={step.link}
                 className="block p-3.5 rounded-xl bg-slate-800/50 hover:bg-slate-800 transition-colors border border-slate-700/50 hover:border-slate-600"
               >
-                <p className="text-xs font-bold text-orange-500 mb-0.5">Step {idx + 1}</p>
+                <p className="text-xs font-bold text-orange-500 mb-0.5">{t('step')} {idx + 1}</p>
                 <p className="text-xs font-semibold text-white">{step.title}</p>
                 <p className="text-[10px] text-slate-400 mt-1">{step.desc}</p>
               </a>
@@ -444,8 +513,8 @@ export default function DashboardPage() {
           <div className="flex items-center gap-3">
             <span className="text-xl">🔧</span>
             <div>
-              <p className="text-sm font-semibold text-slate-800">Dashboard Edit Mode</p>
-              <p className="text-xs text-slate-500">Rearrange sections, toggle visibility, and adjust widths. Save your customizations below.</p>
+              <p className="text-sm font-semibold text-slate-800">{t('dashboardEditMode')}</p>
+              <p className="text-xs text-slate-500">{t('dashboardEditDesc')}</p>
             </div>
           </div>
           <div className="flex items-center gap-2 self-end md:self-auto">
@@ -454,21 +523,21 @@ export default function DashboardPage() {
               className="btn-secondary py-2 px-3 text-xs flex items-center gap-1.5"
             >
               <RotateCcw size={12} />
-              Reset Defaults
+              {t('resetDefaults')}
             </button>
             <button
               onClick={handleCancel}
               className="btn-secondary py-2 px-3 text-xs flex items-center gap-1.5 text-slate-600 hover:text-slate-800"
             >
               <X size={12} />
-              Cancel
+              {t('cancel')}
             </button>
             <button
               onClick={handleSave}
               className="btn-primary py-2 px-4 text-xs flex items-center gap-1.5"
             >
               <Save size={12} />
-              Save Layout
+              {t('saveLayout')}
             </button>
           </div>
         </div>
@@ -492,7 +561,7 @@ export default function DashboardPage() {
                             case 'clients':
                               return (
                                 <StatCard
-                                  label="Total Clients"
+                                  label={t('totalClients')}
                                   value={stats.totalClients}
                                   change={stats.clientGrowth}
                                   icon={<Users size={18} style={{ color: '#F4511E' }} />}
@@ -502,7 +571,7 @@ export default function DashboardPage() {
                             case 'projects':
                               return (
                                 <StatCard
-                                  label="Active Projects"
+                                  label={t('activeProjects')}
                                   value={stats.activeProjects}
                                   change={stats.projectGrowth}
                                   icon={<FolderOpen size={18} className="text-blue-500" />}
@@ -512,7 +581,7 @@ export default function DashboardPage() {
                             case 'revenue':
                               return (
                                 <StatCard
-                                  label="Monthly Revenue"
+                                  label={t('monthlyRevenue')}
                                   value={formatCurrency(stats.monthlyRevenue)}
                                   change={stats.revenueGrowth}
                                   icon={<IndianRupee size={18} className="text-emerald-500" />}
@@ -522,17 +591,17 @@ export default function DashboardPage() {
                             case 'outstanding':
                               return (
                                 <StatCard
-                                  label="Outstanding"
+                                  label={t('outstanding')}
                                   value={formatCurrency(stats.outstandingPayments)}
                                   icon={<Clock size={18} className="text-amber-500" />}
                                   iconBg="bg-amber-50"
-                                  action={isAdmin ? <a href="/invoices?create=true" className="text-xs font-semibold text-orange-600 hover:underline flex items-center gap-1">➕ Create Invoice</a> : undefined}
+                                  action={isAdmin ? <a href="/invoices?create=true" className="text-xs font-semibold text-orange-600 hover:underline flex items-center gap-1">➕ {t('createInvoice')}</a> : undefined}
                                 />
                               );
                             case 'pending':
                               return (
                                 <StatCard
-                                  label="Pending Approvals"
+                                  label={t('pendingApprovals')}
                                   value={stats.pendingApprovals}
                                   icon={<CheckCircle size={18} className="text-purple-500" />}
                                   iconBg="bg-purple-50"
@@ -548,7 +617,7 @@ export default function DashboardPage() {
                             <StatCardEditorWrapper
                               key={stat.id}
                               id={stat.id}
-                              label={stat.label}
+                              label={t(stat.id === 'clients' ? 'totalClients' : stat.id === 'projects' ? 'activeProjects' : stat.id === 'revenue' ? 'monthlyRevenue' : stat.id === 'outstanding' ? 'outstanding' : 'pendingApprovals')}
                               visible={stat.visible}
                               onMoveLeft={() => moveStat(statIndex, -1)}
                               onMoveRight={() => moveStat(statIndex, 1)}
@@ -569,22 +638,22 @@ export default function DashboardPage() {
                       <div className="flex items-center justify-between mb-6">
                         <div>
                           <div className="flex items-center gap-3">
-                            <h2 className="section-title">Revenue Overview</h2>
+                            <h2 className="section-title">{t('revenueOverview')}</h2>
                             <select
                               value={months}
                               onChange={(e) => setMonths(Number(e.target.value))}
                               className="text-xs bg-slate-50 border border-slate-200 rounded p-1 font-semibold text-slate-700 outline-none cursor-pointer focus:ring-1 focus:ring-orange-500/20"
                             >
-                              <option value={3}>3 Months</option>
-                              <option value={6}>6 Months</option>
-                              <option value={12}>12 Months</option>
+                              <option value={3}>{t('threeMonths')}</option>
+                              <option value={6}>{t('sixMonths')}</option>
+                              <option value={12}>{t('twelveMonths')}</option>
                             </select>
                           </div>
-                          <p className="text-sm text-slate-500 mt-0.5">Billed vs. Collected</p>
+                          <p className="text-sm text-slate-500 mt-0.5">{t('billedVsCollected')}</p>
                         </div>
                         <div className="flex items-center gap-4 text-xs font-medium text-slate-500">
-                          <span className="flex items-center gap-1.5"><span className="w-3 h-1 rounded-full inline-block" style={{ background: '#F4511E' }} /> Billed</span>
-                          <span className="flex items-center gap-1.5"><span className="w-3 h-1 rounded-full inline-block bg-slate-200" /> Collected</span>
+                          <span className="flex items-center gap-1.5"><span className="w-3 h-1 rounded-full inline-block" style={{ background: '#F4511E' }} /> {t('billed')}</span>
+                          <span className="flex items-center gap-1.5"><span className="w-3 h-1 rounded-full inline-block bg-slate-200" /> {t('collected')}</span>
                         </div>
                       </div>
                       <ResponsiveContainer width="100%" height={200}>
@@ -602,8 +671,8 @@ export default function DashboardPage() {
                             contentStyle={{ border: '1px solid #e2e8f0', borderRadius: '12px', fontSize: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
                             formatter={(v: number) => [formatCurrency(v), '']}
                           />
-                          <Area type="monotone" dataKey="revenue" stroke="#F4511E" strokeWidth={2} fill="url(#revGrad)" name="Billed" />
-                          <Area type="monotone" dataKey="collected" stroke="#94a3b8" strokeWidth={1.5} fill="none" strokeDasharray="4 3" name="Collected" />
+                          <Area type="monotone" dataKey="revenue" stroke="#F4511E" strokeWidth={2} fill="url(#revGrad)" name={t('billed')} />
+                          <Area type="monotone" dataKey="collected" stroke="#94a3b8" strokeWidth={1.5} fill="none" strokeDasharray="4 3" name={t('collected')} />
                         </AreaChart>
                       </ResponsiveContainer>
                     </div>
@@ -612,8 +681,8 @@ export default function DashboardPage() {
                   return (
                     <div className="card p-6 h-full flex flex-col justify-between">
                       <div>
-                        <h2 className="section-title mb-1">Project Status</h2>
-                        <p className="text-sm text-slate-500 mb-6">Current breakdown</p>
+                        <h2 className="section-title mb-1">{t('projectStatus')}</h2>
+                        <p className="text-sm text-slate-500 mb-6">{t('currentBreakdown')}</p>
                       </div>
                       <div className="flex items-center justify-center">
                         <PieChart width={140} height={140}>
@@ -627,7 +696,7 @@ export default function DashboardPage() {
                           <div key={d.name} className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <span className="w-2.5 h-2.5 rounded-full" style={{ background: d.color }} />
-                              <span className="text-sm text-slate-600">{d.name}</span>
+                              <span className="text-sm text-slate-600">{t(d.name.toLowerCase() === 'active' ? 'active' : d.name.toLowerCase() === 'review' ? 'review' : d.name.toLowerCase() === 'completed' ? 'completed' : d.name)}</span>
                             </div>
                             <span className="text-sm font-semibold text-navy-900">{d.value}</span>
                           </div>
@@ -639,8 +708,8 @@ export default function DashboardPage() {
                   return (
                     <div className="card p-6 h-full flex flex-col justify-between">
                       <div className="flex items-center justify-between mb-4">
-                        <h2 className="section-title">Active Projects</h2>
-                        <a href="/projects" className="text-xs font-semibold text-orange-600 hover:underline">View all →</a>
+                        <h2 className="section-title">{t('activeProjects')}</h2>
+                        <a href="/projects" className="text-xs font-semibold text-orange-600 hover:underline">{t('viewAll')} →</a>
                       </div>
                       <div className="space-y-4">
                         {activeProjectsList.map((project: any) => (
@@ -654,7 +723,7 @@ export default function DashboardPage() {
                               <Progress value={project.progress} showLabel />
                             </div>
                             <div className="text-right flex-shrink-0">
-                              <p className="text-xs text-slate-500">Due</p>
+                              <p className="text-xs text-slate-500">{t('due')}</p>
                               <p className="text-sm font-medium text-navy-900">{new Date(project.deadline).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</p>
                             </div>
                           </div>
@@ -666,8 +735,8 @@ export default function DashboardPage() {
                   return (
                     <div className="card p-6 h-full flex flex-col justify-between">
                       <div className="flex items-center justify-between mb-4">
-                        <h2 className="section-title">Recent Activity</h2>
-                        <a href="/activity" className="text-xs font-semibold text-orange-600 hover:underline">All →</a>
+                        <h2 className="section-title">{t('recentActivity')}</h2>
+                        <a href="/activity" className="text-xs font-semibold text-orange-600 hover:underline">{t('all')} →</a>
                       </div>
                       <div className="space-y-4">
                         {recentActivity.slice(0, 6).map((log: any) => (
@@ -693,16 +762,16 @@ export default function DashboardPage() {
                     <div className={`card p-5 border-l-4 ${hasOverdue ? 'border-rose-500' : 'border-slate-300 bg-slate-50'} space-y-4`}>
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm font-semibold text-navy-900">{hasOverdue ? '🚨 Overdue Invoices' : 'Overdue Invoices Alert'}</p>
+                          <p className="text-sm font-semibold text-navy-900">{hasOverdue ? '🚨 ' + t('overdueInvoicesTitle') : t('overdueInvoicesAlert')}</p>
                           <p className="text-xs text-slate-500 mt-0.5">
                             {hasOverdue 
-                              ? `${overdueInvoices.length} invoice(s) are past their due date.`
-                              : 'No overdue invoices currently.'
+                              ? `${overdueInvoices.length} ${t('overdueInvoicesDesc')}`
+                              : t('noOverdueInvoices')
                             }
                           </p>
                         </div>
                         {hasOverdue && (
-                          <a href="/invoices" className="text-xs font-semibold text-orange-600 hover:underline">View all</a>
+                          <a href="/invoices" className="text-xs font-semibold text-orange-600 hover:underline">{t('viewAll')}</a>
                         )}
                       </div>
                       {hasOverdue && (
@@ -711,7 +780,7 @@ export default function DashboardPage() {
                             <div key={inv.id} className="flex items-center justify-between border-t border-slate-100 pt-2.5">
                               <div>
                                 <p className="text-xs font-semibold text-navy-900">{inv.invoiceNumber} &middot; {inv.clientName}</p>
-                                <p className="text-[10px] text-slate-400">Due {new Date(inv.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</p>
+                                <p className="text-[10px] text-slate-400">{t('due')} {new Date(inv.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</p>
                               </div>
                               <div className="flex items-center gap-3">
                                 <span className="text-xs font-bold text-rose-600">{formatCurrency(inv.total)}</span>
@@ -719,18 +788,28 @@ export default function DashboardPage() {
                                   onClick={(e) => {
                                     e.preventDefault();
                                     api.post(`/invoices/${inv.id}/send`)
-                                      .then(() => toast.success('Reminder email sent!'))
+                                      .then(() => toast.success(t('reminderEmailSent')))
                                       .catch(err => toast.error(err.response?.data?.error || err.message));
                                   }}
                                   className="btn-secondary text-[10px] py-1 px-2.5 cursor-pointer"
                                 >
-                                  Send Reminder
+                                  {t('sendReminder')}
                                 </button>
                               </div>
                             </div>
                           ))}
                         </div>
                       )}
+                    </div>
+                  );
+                case 'approvals_pipeline':
+                  return (
+                    <div className="h-full">
+                      <ApprovalsPipelineWidget
+                        pendingClient={data?.pendingClientApprovals || []}
+                        pendingInternal={data?.pendingInternalApprovals || []}
+                        recentlyApproved={data?.recentlyApproved || []}
+                      />
                     </div>
                   );
                 default:

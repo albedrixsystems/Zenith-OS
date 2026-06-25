@@ -11,12 +11,14 @@ import type { Client, ClientStatus } from '../types'
 import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
+import { useLanguage } from '../context/LanguageContext'
 
 export default function ClientsPage() {
   const { user } = useAuth()
   const isAdmin = user?.role === 'super_admin'
   const isReadOnly = user?.role === 'client_viewer'
   const toast = useToast()
+  const { t } = useLanguage()
 
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
@@ -345,7 +347,7 @@ export default function ClientsPage() {
           onClick={() => handleSelectClient(null)}
           className="btn-ghost flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-orange-600 mb-2 px-0 cursor-pointer"
         >
-          <ArrowLeft size={12} /> Back to Clients
+          <ArrowLeft size={12} /> {t('backToClients')}
         </button>
 
         {/* Profile Header */}
@@ -357,7 +359,7 @@ export default function ClientsPage() {
                 <h1 className="text-xl md:text-2xl font-bold text-navy-900">{client.companyName}</h1>
                 <ClientStatusBadge status={client.status} />
               </div>
-              <p className="text-sm text-slate-500 mt-1">Established client since {new Date(client.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short' })}</p>
+              <p className="text-sm text-slate-500 mt-1">{t('establishedClient')} {new Date(client.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short' })}</p>
               {/* Render Tags */}
               {client.tags && client.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-2">
@@ -372,15 +374,15 @@ export default function ClientsPage() {
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-slate-500 uppercase">Industry:</span>
-              <span className="badge badge-info bg-blue-50 text-blue-700 capitalize font-bold">{client.industry}</span>
+              <span className="text-xs font-medium text-slate-500 uppercase">{t('industry')}:</span>
+              <span className="badge badge-info bg-blue-50 text-blue-700 capitalize font-bold">{t(client.industry.toLowerCase()) || client.industry}</span>
             </div>
             {isAdmin && !isReadOnly && (
               <button
                 onClick={(e) => triggerDeleteClient(e, client.id)}
                 className="btn-secondary text-xs py-1.5 px-3 border-rose-200 text-rose-600 hover:bg-rose-50 cursor-pointer font-bold"
               >
-                Delete Client
+                {t('delete')}
               </button>
             )}
           </div>
@@ -389,9 +391,9 @@ export default function ClientsPage() {
         {/* Tabs selector */}
         <div className="flex gap-2 border-b border-slate-100 pb-2">
           {[
-            { id: 'overview', label: 'Overview' },
-            { id: 'timeline', label: 'Timeline & Communications' },
-            { id: 'system', label: 'System Audit Logs' },
+            { id: 'overview', label: t('overview') || 'Overview' },
+            { id: 'timeline', label: t('timelineTitle') || 'Timeline' },
+            { id: 'system', label: t('systemAuditLogs') || 'System Audit Logs' },
           ].map(t => (
             <button
               key={t.id}
@@ -413,27 +415,27 @@ export default function ClientsPage() {
           {/* Left: Contact Info & Financial details */}
           <div className="space-y-6">
             <div className="card p-6">
-              <h2 className="section-title mb-4">Contact Information</h2>
+              <h2 className="section-title mb-4">{t('contactInformation')}</h2>
               <div className="space-y-3.5">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Contact Person</label>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('contactPerson')}</label>
                   <p className="text-sm font-medium text-navy-900 mt-0.5">{client.contactPerson}</p>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address</label>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('email')}</label>
                   <p className="text-sm font-medium text-navy-900 mt-0.5 break-all">{client.email}</p>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Phone</label>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('phone')}</label>
                   <p className="text-sm font-medium text-navy-900 mt-0.5">{client.phone || '—'}</p>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Address</label>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('address')}</label>
                   <p className="text-sm font-medium text-navy-900 mt-0.5">{client.address}</p>
                 </div>
                 {client.notes && (
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Client Notes</label>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('notes')}</label>
                     <p className="text-xs font-medium text-slate-600 mt-1 bg-slate-50 p-2.5 rounded-xl border border-slate-100">{client.notes}</p>
                   </div>
                 )}
@@ -441,7 +443,7 @@ export default function ClientsPage() {
                 {/* Render Custom Fields */}
                 {client.customFields && client.customFields.length > 0 && (
                   <div className="border-t border-slate-100 pt-3 mt-3">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Custom Metadata</label>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">{t('customMetadata')}</label>
                     <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                       {client.customFields.map((f: { label: string; value: string }) => (
                         <div key={f.label} className="min-w-0">
@@ -457,13 +459,13 @@ export default function ClientsPage() {
 
             {/* GSTIN & Cost/Value info displayed alongside each other */}
             <div className="card p-6 border-l-4 border-emerald-500">
-              <h2 className="section-title mb-4">GST & Financial Details</h2>
+              <h2 className="section-title mb-4">{t('gstFinancialDetails')}</h2>
               <div className="space-y-4">
                 
                 {/* GST Display alongside cost/value info */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-emerald-50/50 rounded-xl p-3.5 border border-emerald-100/50">
-                    <label className="block text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Client GSTIN</label>
+                    <label className="block text-[10px] font-bold text-emerald-800 uppercase tracking-wider">{t('gstin')}</label>
                     {client.gstin ? (
                       <div className="flex items-center justify-between mt-1 gap-2">
                         <span className="text-xs font-bold text-emerald-950 font-mono tracking-wide">{client.gstin}</span>
@@ -477,11 +479,11 @@ export default function ClientsPage() {
                         </button>
                       </div>
                     ) : (
-                      <p className="text-xs text-slate-500 mt-1 italic">No GST registered</p>
+                      <p className="text-xs text-slate-500 mt-1 italic">{t('noGstRegistered')}</p>
                     )}
                   </div>
                   <div className="bg-blue-50/50 rounded-xl p-3.5 border border-blue-100/50">
-                    <label className="block text-[10px] font-bold text-blue-800 uppercase tracking-wider">Client PAN</label>
+                    <label className="block text-[10px] font-bold text-blue-800 uppercase tracking-wider">{t('pan')}</label>
                     {client.pan ? (
                       <div className="flex items-center justify-between mt-1 gap-2">
                         <span className="text-xs font-bold text-blue-950 font-mono tracking-wide">{client.pan}</span>
@@ -501,18 +503,18 @@ export default function ClientsPage() {
                         </button>
                       </div>
                     ) : (
-                      <p className="text-xs text-slate-500 mt-1 italic">No PAN registered</p>
+                      <p className="text-xs text-slate-500 mt-1 italic">{t('noPanRegistered')}</p>
                     )}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 mt-2">
                   <div className="bg-slate-50 rounded-xl p-3">
-                    <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Revenue</span>
+                    <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('totalRevenue')}</span>
                     <span className="text-lg font-bold text-navy-900 block mt-1">{formatCurrency(client.totalRevenue)}</span>
                   </div>
                   <div className="bg-slate-50 rounded-xl p-3">
-                    <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Outstanding</span>
+                    <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('outstanding')}</span>
                     <span className={`text-lg font-bold block mt-1 ${totalOutstanding > 0 ? 'text-amber-600' : 'text-slate-500'}`}>
                       {formatCurrency(totalOutstanding)}
                     </span>
@@ -521,8 +523,8 @@ export default function ClientsPage() {
 
                 <div className="bg-slate-50 rounded-xl p-3 flex justify-between items-center">
                   <div>
-                    <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Projects Summary</span>
-                    <span className="text-xs text-slate-500 mt-0.5">{client.projectCount} active projects</span>
+                    <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('projects')}</span>
+                    <span className="text-xs text-slate-500 mt-0.5">{client.projectCount} {client.projectCount === 1 ? t('project').toLowerCase() : t('projects').toLowerCase()}</span>
                   </div>
                   <span className="w-8 h-8 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center font-bold text-sm">
                     {client.projectCount}
@@ -541,10 +543,10 @@ export default function ClientsPage() {
                 <div className="card p-6">
                   <h2 className="section-title mb-4 flex items-center gap-2">
                     <FolderOpen size={16} className="text-orange-600" />
-                    <span>Related Projects ({clientProjects.length})</span>
+                    <span>{t('projects')} ({clientProjects.length})</span>
                   </h2>
                   {clientProjects.length === 0 ? (
-                    <p className="text-xs text-slate-400 py-2">No projects currently assigned to this client.</p>
+                    <p className="text-xs text-slate-400 py-2">{t('noProjectsAssigned')}</p>
                   ) : (
                     <div className="space-y-4">
                       {clientProjects.map(project => (
@@ -552,14 +554,14 @@ export default function ClientsPage() {
                           <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                             <div>
                               <h4 className="font-semibold text-sm text-navy-900">{project.name}</h4>
-                              <p className="text-[10px] text-slate-400 mt-0.5">Budget: {formatCurrency(project.budget)}</p>
+                              <p className="text-[10px] text-slate-400 mt-0.5">{t('budget')}: {formatCurrency(project.budget)}</p>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className={`badge ${
                                 project.status === 'completed' ? 'badge-success' : 
                                 project.status === 'review' ? 'badge-warning' : 'badge-info'
                               } capitalize text-[10px]`}>
-                                {project.status}
+                                {t(project.status.toLowerCase())}
                               </span>
                             </div>
                           </div>
@@ -567,8 +569,8 @@ export default function ClientsPage() {
                             <Progress value={project.progress} showLabel />
                           </div>
                           <div className="flex justify-between text-[11px] text-slate-400 mt-2">
-                            <span>Tasks: {project.completedTasks}/{project.taskCount} done</span>
-                            <span>Due: {new Date(project.deadline).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                            <span>{t('tasks')}: {project.completedTasks}/{project.taskCount} {t('completed').toLowerCase()}</span>
+                            <span>{t('due')}: {new Date(project.deadline).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                           </div>
                         </div>
                       ))}
@@ -580,19 +582,19 @@ export default function ClientsPage() {
                 <div className="card p-6">
                   <h2 className="section-title mb-4 flex items-center gap-2">
                     <Clock size={16} className="text-orange-600" />
-                    <span>Client Invoices ({clientInvoices.length})</span>
+                    <span>{t('invoices')} ({clientInvoices.length})</span>
                   </h2>
                   {clientInvoices.length === 0 ? (
-                    <p className="text-xs text-slate-400 py-2">No invoices recorded for this client.</p>
+                    <p className="text-xs text-slate-400 py-2">{t('noInvoicesRecorded')}</p>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs">
                         <thead>
                           <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase">
-                            <th className="pb-2">Invoice #</th>
-                            <th className="pb-2">Amount</th>
-                            <th className="pb-2">Status</th>
-                            <th className="pb-2">Due Date</th>
+                            <th className="pb-2">{t('invoiceNumber')}</th>
+                            <th className="pb-2">{t('amount')}</th>
+                            <th className="pb-2">{t('status')}</th>
+                            <th className="pb-2">{t('dueDate')}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -621,14 +623,14 @@ export default function ClientsPage() {
                     <div className="card p-5">
                       <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-1.5">
                         <MessageSquare size={13} className="text-orange-600" />
-                        Log Call, Email, or Note
+                        {t('interactionType')}
                       </h3>
                       <form onSubmit={handleLogInteractionSubmit} className="space-y-3">
                         <div className="grid grid-cols-3 gap-2">
                           {([
-                            { id: 'note', label: 'Note' },
-                            { id: 'call', label: 'Phone Call' },
-                            { id: 'email', label: 'Email Out' }
+                            { id: 'note', label: t('note') || 'Note' },
+                            { id: 'call', label: t('phoneCall') || 'Phone Call' },
+                            { id: 'email', label: t('emailOut') || 'Email Out' }
                           ] as const).map(opt => (
                             <button
                               key={opt.id}
@@ -645,7 +647,7 @@ export default function ClientsPage() {
                           ))}
                         </div>
                         <textarea
-                          placeholder="Type communication summary..."
+                          placeholder={t('typeInteractionSummary')}
                           required
                           value={interactionContent}
                           onChange={e => setInteractionContent(e.target.value)}
@@ -656,7 +658,7 @@ export default function ClientsPage() {
                           disabled={loggingInteraction}
                           className="btn-primary w-full justify-center text-xs py-1.5"
                         >
-                          {loggingInteraction ? 'Saving...' : 'Log Interaction'}
+                          {loggingInteraction ? t('saving') : t('saveInteraction')}
                         </button>
                       </form>
                     </div>
@@ -665,16 +667,16 @@ export default function ClientsPage() {
                     <div className="card p-5">
                       <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-1.5">
                         <Send size={13} className="text-emerald-600" />
-                        Simulate WhatsApp Alert
+                        {t('whatsappAlert')}
                       </h3>
                       <form onSubmit={handleSendWhatsAppSubmit} className="space-y-3">
                         {client.phone ? (
                           <>
                             <div className="text-[10px] text-slate-500">
-                              Recipient number: <span className="font-semibold">{client.phone}</span>
+                              {t('recipientNumber')} <span className="font-semibold">{client.phone}</span>
                             </div>
                             <textarea
-                              placeholder="Type WhatsApp text alert message..."
+                              placeholder={t('whatsappPlaceholder')}
                               required
                               value={waMessage}
                               onChange={e => setWaMessage(e.target.value)}
@@ -685,13 +687,13 @@ export default function ClientsPage() {
                               disabled={sendingWa}
                               className="btn-primary bg-emerald-600 hover:bg-emerald-700 w-full justify-center text-xs py-1.5 cursor-pointer"
                             >
-                              {sendingWa ? 'Sending...' : 'Send WhatsApp Message'}
+                              {sendingWa ? t('sending') : t('sendWhatsapp')}
                             </button>
                           </>
                         ) : (
                           <div className="bg-slate-50 rounded-xl p-4 text-center border border-slate-100 flex flex-col justify-center h-28">
-                            <span className="text-xs text-slate-400 font-medium">WhatsApp unavailable</span>
-                            <span className="text-[10px] text-slate-400 mt-1 italic">No client phone number registered.</span>
+                            <span className="text-xs text-slate-400 font-medium">{t('whatsappUnavailable')}</span>
+                            <span className="text-[10px] text-slate-400 mt-1 italic">{t('noPhoneRegistered')}</span>
                           </div>
                         )}
                       </form>
@@ -701,10 +703,10 @@ export default function ClientsPage() {
 
                 {/* Timeline visual display */}
                 <div className="card p-6">
-                  <h3 className="section-title mb-4">Communications History Timeline</h3>
+                  <h3 className="section-title mb-4">{t('timelineTitle')}</h3>
                   {combinedTimeline.length === 0 ? (
                     <div className="text-center py-6">
-                      <p className="text-xs text-slate-400 italic">No communication history logged yet.</p>
+                      <p className="text-xs text-slate-400 italic">{t('noHistory')}</p>
                     </div>
                   ) : (
                     <div className="space-y-4 relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
@@ -720,7 +722,7 @@ export default function ClientsPage() {
                             </div>
                             <p className="text-slate-700 whitespace-pre-line leading-relaxed">{item.content}</p>
                             <div className="text-[10px] text-slate-400 mt-2 font-medium">
-                              Logged by: {item.author}
+                              {t('loggedBy')}: {item.author}
                             </div>
                           </div>
                         </div>
@@ -736,10 +738,10 @@ export default function ClientsPage() {
               <div className="card p-6">
                 <h2 className="section-title mb-4 flex items-center gap-2">
                   <CheckCircle size={16} className="text-orange-600" />
-                  <span>Recent History & Activities ({filteredLogs.length})</span>
+                  <span>{t('recentActivity')} ({filteredLogs.length})</span>
                 </h2>
                 {filteredLogs.length === 0 ? (
-                  <p className="text-xs text-slate-400 py-2">No activity recorded for this client.</p>
+                  <p className="text-xs text-slate-400 py-2">{t('noActivity')}</p>
                 ) : (
                   <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
                     {filteredLogs.map(log => (
@@ -769,9 +771,9 @@ export default function ClientsPage() {
   // Render Kanban Columns view
   const renderKanbanView = () => {
     const columns = [
-      { id: 'lead' as const, title: 'Lead Stage', border: 'border-amber-500', bg: 'bg-amber-50/10' },
-      { id: 'active' as const, title: 'Active Partner', border: 'border-emerald-500', bg: 'bg-emerald-50/10' },
-      { id: 'inactive' as const, title: 'Closed / Inactive', border: 'border-slate-500', bg: 'bg-slate-50/10' }
+      { id: 'lead' as const, title: t('lead'), border: 'border-amber-500', bg: 'bg-amber-50/10' },
+      { id: 'active' as const, title: t('active'), border: 'border-emerald-500', bg: 'bg-emerald-50/10' },
+      { id: 'inactive' as const, title: t('inactive'), border: 'border-slate-500', bg: 'bg-slate-50/10' }
     ]
 
     return (
@@ -792,7 +794,7 @@ export default function ClientsPage() {
               <div className={`flex-1 overflow-y-auto space-y-3.5 p-2.5 rounded-2xl border border-slate-100 min-h-[40vh] bg-slate-50/40`}>
                 {colClients.length === 0 ? (
                   <div className="text-center py-8 text-xs text-slate-400 italic">
-                    No clients in this stage.
+                    {t('noClientsInStage') || 'No clients in this stage.'}
                   </div>
                 ) : (
                   colClients.map(client => (
@@ -827,7 +829,7 @@ export default function ClientsPage() {
 
                       {/* Summary details */}
                       <div className="text-[11px] text-slate-500 flex justify-between items-center bg-slate-50/50 p-2 rounded-lg border border-slate-100/30">
-                        <span className="truncate">{client.industry}</span>
+                        <span className="truncate">{t(client.industry.toLowerCase()) || client.industry}</span>
                         <span className="font-bold text-emerald-600 font-mono text-xs">{formatCurrency(client.totalRevenue)}</span>
                       </div>
 
@@ -838,7 +840,7 @@ export default function ClientsPage() {
                             {col.id !== 'lead' && (
                               <button
                                 type="button"
-                                title="Move to Lead"
+                                title={t('moveToLead') || 'Move to Lead'}
                                 onClick={() => handleMoveStage(client.id, 'lead')}
                                 className="p-1 rounded-md text-slate-400 hover:text-orange-600 hover:bg-slate-100 transition-all cursor-pointer"
                               >
@@ -848,7 +850,7 @@ export default function ClientsPage() {
                             {col.id === 'inactive' && (
                               <button
                                 type="button"
-                                title="Move to Active"
+                                title={t('moveToActive') || 'Move to Active'}
                                 onClick={() => handleMoveStage(client.id, 'active')}
                                 className="p-1 rounded-md text-slate-400 hover:text-orange-600 hover:bg-slate-100 transition-all cursor-pointer"
                               >
@@ -860,7 +862,7 @@ export default function ClientsPage() {
                             {col.id === 'lead' && (
                               <button
                                 type="button"
-                                title="Move to Active"
+                                title={t('moveToActive') || 'Move to Active'}
                                 onClick={() => handleMoveStage(client.id, 'active')}
                                 className="p-1 rounded-md text-slate-400 hover:text-orange-600 hover:bg-slate-100 transition-all cursor-pointer"
                               >
@@ -870,7 +872,7 @@ export default function ClientsPage() {
                             {col.id !== 'inactive' && (
                               <button
                                 type="button"
-                                title="Move to Closed"
+                                title={t('moveToClosed') || 'Move to Closed'}
                                 onClick={() => handleMoveStage(client.id, 'inactive')}
                                 className="p-1 rounded-md text-slate-400 hover:text-orange-600 hover:bg-slate-100 transition-all cursor-pointer"
                               >
@@ -892,7 +894,7 @@ export default function ClientsPage() {
   }
 
   return (
-    <Layout title="Clients">
+    <Layout title={t('clients')}>
       
       {/* Dynamic View rendering */}
       {selectedClient ? (
@@ -902,12 +904,12 @@ export default function ClientsPage() {
           {/* Header */}
           <div className="page-header flex flex-wrap items-start justify-between gap-4">
             <div>
-              <h1 className="page-title">Clients</h1>
-              <p className="page-subtitle">{clients.length} total · {clients.filter(c => c.status === 'active').length} active</p>
+              <h1 className="page-title">{t('clients')}</h1>
+              <p className="page-subtitle">{clients.length} {t('totalClientsDesc')} · {clients.filter(c => c.status === 'active').length} {t('activeClientsDesc')}</p>
             </div>
             {!isReadOnly && (
               <button className="btn-primary flex items-center gap-2 cursor-pointer" onClick={() => setShowAdd(true)}>
-                <Plus size={16} /> Add Client
+                <Plus size={16} /> {t('addClient')}
               </button>
             )}
           </div>
@@ -920,7 +922,7 @@ export default function ClientsPage() {
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Search by name, contact, GST, tags..."
+                placeholder={t('searchPlaceholderClients')}
                 className="input pl-9 py-2"
               />
             </div>
@@ -930,14 +932,14 @@ export default function ClientsPage() {
               id="filter-toggle-btn"
               aria-expanded={showFilters}
               aria-controls="advanced-filters-panel"
-              aria-label="Toggle advanced filters panel"
+              aria-label={t('toggleFilters') || 'Toggle advanced filters panel'}
               onClick={() => setShowFilters(!showFilters)}
               className={`btn-secondary flex items-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500/25 ${
                 showFilters ? 'bg-orange-50 border-orange-300 text-orange-600 font-semibold' : ''
               }`}
             >
               <Filter size={15} />
-              <span>Filters</span>
+              <span>{t('filters')}</span>
               {activeFilterCount > 0 && (
                 <span className="w-5 h-5 rounded-full bg-orange-600 text-white text-[10px] flex items-center justify-center font-bold">
                   {activeFilterCount}
@@ -956,7 +958,7 @@ export default function ClientsPage() {
                     : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
-                List Grid
+                {t('listGrid')}
               </button>
               <button
                 type="button"
@@ -967,7 +969,7 @@ export default function ClientsPage() {
                     : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
-                Kanban Pipeline
+                {t('kanbanPipeline')}
               </button>
             </div>
           </div>
@@ -980,65 +982,65 @@ export default function ClientsPage() {
             >
               {/* Filter by Status */}
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Status</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">{t('status')}</label>
                 <select
                   value={statusFilter}
                   onChange={e => setStatusFilter(e.target.value as ClientStatus | 'all')}
                   className="input py-2 bg-white"
                 >
-                  <option value="all">All Statuses</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                  <option value="lead">Lead</option>
+                  <option value="all">{t('allStatuses')}</option>
+                  <option value="active">{t('active')}</option>
+                  <option value="inactive">{t('inactive')}</option>
+                  <option value="lead">{t('lead')}</option>
                 </select>
               </div>
 
               {/* Filter by Industry */}
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Industry</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">{t('industry')}</label>
                 <select
                   value={industryFilter}
                   onChange={e => setIndustryFilter(e.target.value)}
                   className="input py-2 bg-white"
                 >
-                  <option value="all">All Industries</option>
-                  <option value="Technology">Technology</option>
-                  <option value="Hospitality">Hospitality</option>
-                  <option value="FMCG">FMCG</option>
-                  <option value="Real Estate">Real Estate</option>
-                  <option value="Education">Education</option>
-                  <option value="Media">Media</option>
-                  <option value="Other">Other</option>
+                  <option value="all">{t('allIndustries')}</option>
+                  <option value="Technology">{t('technology')}</option>
+                  <option value="Hospitality">{t('hospitality')}</option>
+                  <option value="FMCG">{t('fmcg')}</option>
+                  <option value="Real Estate">{t('realEstate')}</option>
+                  <option value="Education">{t('education')}</option>
+                  <option value="Media">{t('media')}</option>
+                  <option value="Other">{t('other')}</option>
                 </select>
               </div>
 
               {/* Filter by Revenue Range */}
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Revenue Range</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">{t('revenueRange')}</label>
                 <select
                   value={revenueFilter}
                   onChange={e => setRevenueFilter(e.target.value)}
                   className="input py-2 bg-white"
                 >
-                  <option value="all">All Ranges</option>
-                  <option value="high">High (&ge; ₹3L)</option>
-                  <option value="medium">Medium (₹1L - ₹3L)</option>
-                  <option value="low">Low (&lt; ₹1L)</option>
+                  <option value="all">{t('allRanges')}</option>
+                  <option value="high">{t('highRange')}</option>
+                  <option value="medium">{t('mediumRange')}</option>
+                  <option value="low">{t('lowRange')}</option>
                 </select>
               </div>
 
               {/* Sort Order */}
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Sort By</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">{t('sortBy')}</label>
                 <select
                   value={sortBy}
                   onChange={e => setSortBy(e.target.value)}
                   className="input py-2 bg-white"
                 >
-                  <option value="name_asc">Company Name (A-Z)</option>
-                  <option value="name_desc">Company Name (Z-A)</option>
-                  <option value="revenue_desc">Revenue (High to Low)</option>
-                  <option value="projects_desc">Projects Count (High to Low)</option>
+                  <option value="name_asc">{t('companyNameAsc')}</option>
+                  <option value="name_desc">{t('companyNameDesc')}</option>
+                  <option value="revenue_desc">{t('revenueDesc')}</option>
+                  <option value="projects_desc">{t('projectsCountDesc')}</option>
                 </select>
               </div>
             </div>
@@ -1067,12 +1069,12 @@ export default function ClientsPage() {
           ) : filtered.length === 0 ? (
             <EmptyState
               icon="👥"
-              title="No clients found"
-              description="Try adjusting your filters or add a new client record."
+              title={t('noClientsFound')}
+              description={t('noClientsFoundDesc')}
               action={
                 !isReadOnly ? (
                   <button className="btn-primary flex items-center gap-2 cursor-pointer" onClick={() => setShowAdd(true)}>
-                    <Plus size={15} /> Add Client
+                    <Plus size={15} /> {t('addClient')}
                   </button>
                 ) : undefined
               }
@@ -1134,7 +1136,7 @@ export default function ClientsPage() {
                           <button
                             onClick={(e) => triggerDeleteClient(e, client.id)}
                             className="btn-ghost p-1 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded"
-                            title="Delete Client"
+                            title={t('delete') || "Delete Client"}
                           >
                             <Trash size={14} />
                           </button>
@@ -1153,7 +1155,7 @@ export default function ClientsPage() {
                       </div>
                       <div className="flex items-center gap-2 text-xs text-slate-500">
                         <Building2 size={12} className="flex-shrink-0" />
-                        <span className="truncate">{client.industry} &middot; {client.address.split(',')[0]}</span>
+                        <span className="truncate">{t(client.industry.toLowerCase()) || client.industry} &middot; {client.address.split(',')[0]}</span>
                       </div>
                     </div>
                   </div>
@@ -1165,7 +1167,7 @@ export default function ClientsPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1 text-xs text-slate-500">
                         <FolderOpen size={12} />
-                        <span>{client.projectCount} project{client.projectCount !== 1 ? 's' : ''}</span>
+                        <span>{client.projectCount} {client.projectCount !== 1 ? t('projects').toLowerCase() : t('project').toLowerCase()}</span>
                       </div>
                       <div className="flex flex-col items-end">
                         <div className="flex items-center gap-1 text-xs font-bold text-emerald-600">
@@ -1174,7 +1176,7 @@ export default function ClientsPage() {
                         </div>
                         {client.gstin ? (
                           <div className="flex items-center gap-1 mt-0.5 text-[9px] font-mono text-slate-400" onClick={(e) => handleCopyGstin(e, client.gstin || '', client.id)}>
-                            <span>GSTIN: {client.gstin}</span>
+                            <span>{t('gstin')}: {client.gstin}</span>
                             <button
                               type="button"
                               className="text-slate-400 hover:text-slate-600 transition-colors p-0.5 rounded cursor-pointer"
@@ -1184,7 +1186,7 @@ export default function ClientsPage() {
                             </button>
                           </div>
                         ) : (
-                          <span className="text-[9px] text-slate-400 italic">No GSTIN</span>
+                          <span className="text-[9px] text-slate-400 italic">{t('noGstRegistered') || 'No GSTIN'}</span>
                         )}
                       </div>
                     </div>
@@ -1196,11 +1198,11 @@ export default function ClientsPage() {
           )}
 
           {/* Add Client Modal */}
-          <Modal open={showAdd} onClose={() => setShowAdd(false)} title="Add New Client">
+          <Modal open={showAdd} onClose={() => setShowAdd(false)} title={t('addClient')}>
             <form onSubmit={(e) => { e.preventDefault(); handleCreateClient(); }} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label htmlFor="client-company-name" className="block text-xs font-semibold text-slate-700 mb-1">Company Name *</label>
+                  <label htmlFor="client-company-name" className="block text-xs font-semibold text-slate-700 mb-1">{t('companyName')} *</label>
                   <input
                     id="client-company-name"
                     name="companyName"
@@ -1213,7 +1215,7 @@ export default function ClientsPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="client-contact-person" className="block text-xs font-semibold text-slate-700 mb-1">Contact Person *</label>
+                  <label htmlFor="client-contact-person" className="block text-xs font-semibold text-slate-700 mb-1">{t('contactPerson')} *</label>
                   <input
                     id="client-contact-person"
                     name="contactPerson"
@@ -1228,7 +1230,7 @@ export default function ClientsPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label htmlFor="client-email" className="block text-xs font-semibold text-slate-700 mb-1">Email *</label>
+                  <label htmlFor="client-email" className="block text-xs font-semibold text-slate-700 mb-1">{t('email')} *</label>
                   <input
                     id="client-email"
                     name="email"
@@ -1244,7 +1246,7 @@ export default function ClientsPage() {
                   )}
                 </div>
                 <div>
-                  <label htmlFor="client-phone" className="block text-xs font-semibold text-slate-700 mb-1">Phone</label>
+                  <label htmlFor="client-phone" className="block text-xs font-semibold text-slate-700 mb-1">{t('phone')}</label>
                   <input
                     id="client-phone"
                     name="phone"
@@ -1258,7 +1260,7 @@ export default function ClientsPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label htmlFor="client-industry" className="block text-xs font-semibold text-slate-700 mb-1">Industry</label>
+                  <label htmlFor="client-industry" className="block text-xs font-semibold text-slate-700 mb-1">{t('industry')}</label>
                   <select
                     id="client-industry"
                     name="industry"
@@ -1266,17 +1268,17 @@ export default function ClientsPage() {
                     value={newIndustry}
                     onChange={e => setNewIndustry(e.target.value)}
                   >
-                    <option value="Technology">Technology</option>
-                    <option value="Hospitality">Hospitality</option>
-                    <option value="FMCG">FMCG</option>
-                    <option value="Real Estate">Real Estate</option>
-                    <option value="Education">Education</option>
-                    <option value="Media">Media</option>
-                    <option value="Other">Other</option>
+                    <option value="Technology">{t('technology')}</option>
+                    <option value="Hospitality">{t('hospitality')}</option>
+                    <option value="FMCG">{t('fmcg')}</option>
+                    <option value="Real Estate">{t('realEstate')}</option>
+                    <option value="Education">{t('education')}</option>
+                    <option value="Media">{t('media')}</option>
+                    <option value="Other">{t('other')}</option>
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="client-status" className="block text-xs font-semibold text-slate-700 mb-1">Status</label>
+                  <label htmlFor="client-status" className="block text-xs font-semibold text-slate-700 mb-1">{t('status')}</label>
                   <select
                     id="client-status"
                     name="status"
@@ -1284,15 +1286,15 @@ export default function ClientsPage() {
                     value={newStatus}
                     onChange={e => setNewStatus(e.target.value as ClientStatus)}
                   >
-                    <option value="lead">Lead</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
+                    <option value="lead">{t('lead')}</option>
+                    <option value="active">{t('active')}</option>
+                    <option value="inactive">{t('inactive')}</option>
                   </select>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
-                  <label htmlFor="client-address" className="block text-xs font-semibold text-slate-700 mb-1">Address</label>
+                  <label htmlFor="client-address" className="block text-xs font-semibold text-slate-700 mb-1">{t('address')}</label>
                   <input
                     id="client-address"
                     name="address"
@@ -1304,7 +1306,7 @@ export default function ClientsPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="client-gstin" className="block text-xs font-semibold text-slate-700 mb-1">GSTIN</label>
+                  <label htmlFor="client-gstin" className="block text-xs font-semibold text-slate-700 mb-1">{t('gstin')}</label>
                   <input
                     id="client-gstin"
                     name="gstin"
@@ -1319,7 +1321,7 @@ export default function ClientsPage() {
                   )}
                 </div>
                 <div>
-                  <label htmlFor="client-pan" className="block text-xs font-semibold text-slate-700 mb-1">PAN</label>
+                  <label htmlFor="client-pan" className="block text-xs font-semibold text-slate-700 mb-1">{t('pan')}</label>
                   <input
                     id="client-pan"
                     name="pan"
@@ -1335,7 +1337,7 @@ export default function ClientsPage() {
                 </div>
               </div>
               <div>
-                <label htmlFor="client-notes" className="block text-xs font-semibold text-slate-700 mb-1">Notes</label>
+                <label htmlFor="client-notes" className="block text-xs font-semibold text-slate-700 mb-1">{t('notes')}</label>
                 <textarea
                   id="client-notes"
                   name="notes"
@@ -1348,7 +1350,7 @@ export default function ClientsPage() {
 
               {/* Tags Input (comma separated) */}
               <div>
-                <label htmlFor="client-tags" className="block text-xs font-semibold text-slate-700 mb-1">Tags (comma-separated)</label>
+                <label htmlFor="client-tags" className="block text-xs font-semibold text-slate-700 mb-1">{t('tags')} ({t('commaSeparated')})</label>
                 <input
                   id="client-tags"
                   type="text"
@@ -1361,7 +1363,7 @@ export default function ClientsPage() {
 
               {/* Custom fields builder UI */}
               <div className="space-y-2 border-t border-slate-100 pt-3">
-                <label className="block text-xs font-semibold text-slate-700">Custom Metadata Fields</label>
+                <label className="block text-xs font-semibold text-slate-700">{t('customMetadata')}</label>
                 {customFields.map((field, idx) => (
                   <div key={idx} className="flex gap-2 items-center">
                     <input
@@ -1391,7 +1393,7 @@ export default function ClientsPage() {
                       onClick={() => setCustomFields(prev => prev.filter((_, i) => i !== idx))}
                       className="text-rose-500 hover:text-rose-700 text-xs font-bold px-1"
                     >
-                      Remove
+                      {t('remove')}
                     </button>
                   </div>
                 ))}
@@ -1400,14 +1402,14 @@ export default function ClientsPage() {
                   onClick={() => setCustomFields(prev => [...prev, { label: '', value: '' }])}
                   className="text-xs font-semibold text-orange-600 hover:text-orange-700 flex items-center gap-1 cursor-pointer"
                 >
-                  + Add Custom Field
+                  {t('addCustomField')}
                 </button>
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button type="button" className="btn-secondary flex-1 cursor-pointer" onClick={() => setShowAdd(false)}>Cancel</button>
+                <button type="button" className="btn-secondary flex-1 cursor-pointer" onClick={() => setShowAdd(false)}>{t('cancel')}</button>
                 <button type="submit" className="btn-primary flex-1 justify-center cursor-pointer">
-                  <Plus size={15} /> Create Client
+                  <Plus size={15} /> {t('createClient')}
                 </button>
               </div>
             </form>
@@ -1416,7 +1418,7 @@ export default function ClientsPage() {
           {/* Bulk Action floating controls */}
           {selectedIds.length > 0 && (
             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-4 animate-slide-up border border-slate-800">
-              <span className="text-xs font-semibold">{selectedIds.length} selected</span>
+              <span className="text-xs font-semibold">{selectedIds.length} {t('selected')}</span>
               <div className="w-px h-4 bg-slate-700" />
               <button
                 onClick={() => {
@@ -1444,19 +1446,19 @@ export default function ClientsPage() {
                 }}
                 className="text-xs font-bold text-orange-400 hover:text-orange-300 transition-colors cursor-pointer"
               >
-                Export CSV
+                {t('exportCsv')}
               </button>
               <button
                 onClick={triggerBulkDelete}
                 className="text-xs font-bold text-rose-400 hover:text-rose-300 transition-colors cursor-pointer"
               >
-                Delete
+                {t('delete')}
               </button>
               <button
                 onClick={() => setSelectedIds([])}
                 className="text-xs font-bold text-slate-400 hover:text-slate-300 transition-colors cursor-pointer"
               >
-                Cancel
+                {t('cancel')}
               </button>
             </div>
           )}
@@ -1466,14 +1468,14 @@ export default function ClientsPage() {
             open={confirmDeleteOpen}
             onClose={() => setConfirmDeleteOpen(false)}
             onConfirm={handleConfirmDelete}
-            title={pendingBulkDelete ? "Delete Multiple Clients?" : "Delete Client?"}
+            title={pendingBulkDelete ? t('deleteMultipleClients') : t('deleteClientTitle')}
             message={
               pendingBulkDelete 
-                ? `Are you sure you want to permanently delete these ${selectedIds.length} selected clients? This action is destructive and cannot be undone.`
-                : "Are you sure you want to permanently delete this client? This action is destructive and cannot be undone."
+                ? t('deleteMultipleClientsDesc')
+                : t('deleteClientDesc')
             }
-            confirmText="Delete"
-            cancelText="Cancel"
+            confirmText={t('delete')}
+            cancelText={t('cancel')}
             variant="danger"
           />
         </div>

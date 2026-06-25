@@ -24,6 +24,9 @@ router.post('/create-order', async (req, res) => {
     const { invoiceId } = req.body
     const invoice = await Invoice.findById(invoiceId).populate('clientId', 'companyName')
     if (!invoice) return res.status(404).json({ error: 'Invoice not found' })
+    if (['client', 'client_viewer'].includes(req.user.role) && invoice.clientId._id.toString() !== req.user.clientId?.toString()) {
+      return res.status(403).json({ error: 'Access denied' })
+    }
     if (invoice.status === 'paid') return res.status(400).json({ error: 'Invoice already paid' })
 
     const order = {
@@ -42,6 +45,12 @@ router.post('/verify', async (req, res) => {
   try {
     const { razorpayOrderId, razorpayPaymentId, razorpaySignature, invoiceId } = req.body
 
+    const invoice = await Invoice.findById(invoiceId)
+    if (!invoice) return res.status(404).json({ error: 'Invoice not found' })
+    if (['client', 'client_viewer'].includes(req.user.role) && invoice.clientId.toString() !== req.user.clientId?.toString()) {
+      return res.status(403).json({ error: 'Access denied' })
+    }
+
     // Verify signature (allow mock_signature in development)
     const body = razorpayOrderId + '|' + razorpayPaymentId
     const expectedSignature = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || 'secret')
@@ -52,7 +61,10 @@ router.post('/verify', async (req, res) => {
     }
 
     // Update invoice
-    const invoice = await Invoice.findByIdAndUpdate(invoiceId, { status: 'paid', paidAt: new Date() }, { new: true })
+    invoice.status = 'paid'
+    invoice.paidAt = new Date()
+    await invoice.save()
+
     if (!invoice) return res.status(404).json({ error: 'Invoice not found' })
 
     // Create payment record

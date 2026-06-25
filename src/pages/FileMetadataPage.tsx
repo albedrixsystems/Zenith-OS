@@ -6,6 +6,7 @@ import { Skeleton } from '../components/ui/index'
 import { formatFileSize, formatDate, getFileIcon } from '../lib/utils'
 import api from '../lib/api'
 import { useToast } from '../context/ToastContext'
+import { useLanguage } from '../context/LanguageContext'
 
 const FILE_TYPE_COLORS: Record<string, string> = {
   pdf: 'bg-rose-50 text-rose-600',
@@ -23,6 +24,7 @@ export default function FileMetadataPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const toast = useToast()
+  const { t } = useLanguage()
   
   const [file, setFile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -53,7 +55,7 @@ export default function FileMetadataPage() {
 
   if (loading) {
     return (
-      <Layout title="File Metadata">
+      <Layout title={t('fileMetadata')}>
         <div className="page-header">
           <Skeleton className="h-6 w-32 mb-2" />
           <Skeleton className="h-8 w-64" />
@@ -70,27 +72,27 @@ export default function FileMetadataPage() {
 
   if (!file) {
     return (
-      <Layout title="File Metadata">
+      <Layout title={t('fileMetadata')}>
         <div className="page-header">
           <button onClick={() => navigate('/files')} className="btn-secondary text-xs flex items-center gap-1.5 mb-2">
-            <ArrowLeft size={14} /> Back to Files
+            <ArrowLeft size={14} /> {t('backToFiles')}
           </button>
-          <h1 className="page-title text-rose-600">File Not Found</h1>
-          <p className="page-subtitle">The requested file could not be found or has been deleted.</p>
+          <h1 className="page-title text-rose-600">{t('fileNotFound')}</h1>
+          <p className="page-subtitle">{t('fileNotFoundDesc')}</p>
         </div>
       </Layout>
     )
   }
 
   return (
-    <Layout title={`${file.name} - Metadata`}>
+    <Layout title={`${file.name} - ${t('fileMetadata')}`}>
       <div className="page-header flex flex-col items-start gap-2">
         <button onClick={() => navigate('/files')} className="btn-secondary text-xs flex items-center gap-1.5 transition-all hover:-translate-x-0.5 cursor-pointer">
-          <ArrowLeft size={14} /> Back to Files
+          <ArrowLeft size={14} /> {t('backToFiles')}
         </button>
         <div>
           <h1 className="page-title truncate max-w-xl">{file.name}</h1>
-          <p className="page-subtitle">Detailed Read-Only File Metadata &amp; Parameters</p>
+          <p className="page-subtitle">{t('fileMetadataDesc')}</p>
         </div>
       </div>
 
@@ -109,14 +111,14 @@ export default function FileMetadataPage() {
 
           <div className="space-y-4">
             <div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Description</h3>
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">{t('description')}</h3>
               {file.description ? (
                 <p className="text-sm text-slate-700 bg-slate-50 rounded-xl p-4 border border-slate-100 whitespace-pre-wrap leading-relaxed">
                   {file.description}
                 </p>
               ) : (
                 <p className="text-sm text-slate-400 italic bg-slate-50 rounded-xl p-4 border border-slate-100 border-dashed">
-                  No description provided for this file.
+                  {t('noDescriptionProvided')}
                 </p>
               )}
             </div>
@@ -133,7 +135,7 @@ export default function FileMetadataPage() {
               <div className="flex items-start gap-3 p-3.5 bg-slate-50/50 rounded-xl border border-slate-100">
                 <HardDrive size={18} className="text-slate-400 mt-0.5" />
                 <div>
-                  <p className="text-xs font-semibold text-slate-500">Storage Key</p>
+                  <p className="text-xs font-semibold text-slate-500">{t('storageKey')}</p>
                   <p className="text-sm font-mono text-slate-600 mt-0.5 break-all leading-tight">{file.s3Key}</p>
                 </div>
               </div>
@@ -144,36 +146,36 @@ export default function FileMetadataPage() {
         {/* Sidebar Info Card */}
         <div className="card p-6 space-y-5 flex flex-col justify-between">
           <div className="space-y-4">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Properties</h3>
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t('properties')}</h3>
             
             <div className="flex justify-between items-center py-2 border-b border-slate-50">
-              <span className="text-xs text-slate-500 flex items-center gap-1.5"><Layers size={14} /> Version</span>
+              <span className="text-xs text-slate-500 flex items-center gap-1.5"><Layers size={14} /> {t('version')}</span>
               <span className="badge badge-default font-bold">v{file.version}</span>
             </div>
 
             <div className="flex justify-between items-center py-2 border-b border-slate-50">
-              <span className="text-xs text-slate-500 flex items-center gap-1.5"><HardDrive size={14} /> Size</span>
+              <span className="text-xs text-slate-500 flex items-center gap-1.5"><HardDrive size={14} /> {t('fileSize')}</span>
               <span className="text-xs font-bold text-navy-900">{formatFileSize(file.size)}</span>
             </div>
 
             <div className="flex justify-between items-center py-2 border-b border-slate-50">
-              <span className="text-xs text-slate-500 flex items-center gap-1.5"><User size={14} /> Uploaded By</span>
+              <span className="text-xs text-slate-500 flex items-center gap-1.5"><User size={14} /> {t('uploadedBy')}</span>
               <span className="text-xs font-bold text-navy-900">{file.uploadedByName}</span>
             </div>
 
             <div className="flex justify-between items-center py-2 border-b border-slate-50">
-              <span className="text-xs text-slate-500 flex items-center gap-1.5"><Calendar size={14} /> Upload Date</span>
+              <span className="text-xs text-slate-500 flex items-center gap-1.5"><Calendar size={14} /> {t('uploadDate')}</span>
               <span className="text-xs font-bold text-navy-900">{formatDate(file.createdAt)}</span>
             </div>
 
             <div className="flex justify-between items-center py-2 border-b border-slate-50">
-              <span className="text-xs text-slate-500 flex items-center gap-1.5"><Eye size={14} /> Downloads</span>
+              <span className="text-xs text-slate-500 flex items-center gap-1.5"><Eye size={14} /> {t('downloads')}</span>
               <span className="text-xs font-bold text-orange-600">{file.downloadCount}</span>
             </div>
 
             {project && (
               <div className="pt-2">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Project Reference</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">{t('projectReference')}</p>
                 <div className="p-3 bg-orange-50/30 border border-orange-100 rounded-xl">
                   <p className="text-xs font-bold text-orange-950 truncate">{project.name}</p>
                   <p className="text-[10px] text-orange-700/80 mt-0.5">{project.clientName}</p>
@@ -186,7 +188,7 @@ export default function FileMetadataPage() {
             onClick={() => window.open(file.url, '_blank')}
             className="btn-primary w-full justify-center mt-6 cursor-pointer"
           >
-            <Download size={15} /> Download file raw
+            <Download size={15} /> {t('downloadFileRaw')}
           </button>
         </div>
       </div>

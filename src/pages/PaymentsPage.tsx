@@ -5,11 +5,13 @@ import { Avatar, Modal } from '../components/ui/index'
 import { formatCurrency, formatDate } from '../lib/utils'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
+import { useLanguage } from '../context/LanguageContext'
 import api from '../lib/api'
 
 export default function PaymentsPage() {
   const { user } = useAuth()
   const toast = useToast()
+  const { t } = useLanguage()
   const isAdmin = user?.role === 'super_admin'
 
   const [payments, setPayments] = useState<any[]>([])
@@ -81,14 +83,14 @@ export default function PaymentsPage() {
   }
 
   const methods = [
-    { id: 'upi', label: 'UPI', icon: <Smartphone size={18} />, desc: 'Google Pay, PhonePe, Paytm' },
-    { id: 'card', label: 'Credit / Debit Card', icon: <CreditCard size={18} />, desc: 'Visa, Mastercard, RuPay' },
-    { id: 'netbanking', label: 'Net Banking', icon: <Building2 size={18} />, desc: 'All major banks' },
+    { id: 'upi', label: 'UPI', icon: <Smartphone size={18} />, desc: t('upiDesc') },
+    { id: 'card', label: t('creditDebitCard'), icon: <CreditCard size={18} />, desc: t('cardDesc') },
+    { id: 'netbanking', label: t('netBanking'), icon: <Building2 size={18} />, desc: t('netbankingDesc') },
   ]
 
   if (loading) {
     return (
-      <Layout title="Payments">
+      <Layout title={t('payments')}>
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600" />
         </div>
@@ -97,26 +99,26 @@ export default function PaymentsPage() {
   }
 
   return (
-    <Layout title="Payments">
+    <Layout title={t('payments')}>
       <div className="page-header">
-        <h1 className="page-title">Payments</h1>
-        <p className="page-subtitle">{payments.length} transactions recorded</p>
+        <h1 className="page-title">{t('payments')}</h1>
+        <p className="page-subtitle">{payments.length} {t('transactionsRecorded')}</p>
       </div>
 
       {/* Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="card p-5 text-center">
-          <p className="text-xs text-slate-500 mb-1">Total Collected</p>
+          <p className="text-xs text-slate-500 mb-1">{t('totalCollected')}</p>
           <p className="text-2xl font-bold text-emerald-600">{formatCurrency(totalCollected)}</p>
         </div>
         <div className="card p-5 text-center">
-          <p className="text-xs text-slate-500 mb-1">Pending Invoices</p>
+          <p className="text-xs text-slate-500 mb-1">{t('pendingInvoices')}</p>
           <p className="text-2xl font-bold text-amber-600">
             {formatCurrency(pendingInvoices.reduce((s, i) => s + i.total, 0))}
           </p>
         </div>
         <div className="card p-5 text-center">
-          <p className="text-xs text-slate-500 mb-1">Overdue</p>
+          <p className="text-xs text-slate-500 mb-1">{t('overdue')}</p>
           <p className="text-2xl font-bold text-rose-600">
             {formatCurrency(overdueInvoices.reduce((s, i) => s + i.total, 0))}
           </p>
@@ -126,7 +128,7 @@ export default function PaymentsPage() {
       {/* Pending Invoices - Pay Now section */}
       {pendingInvoices.length > 0 && (
         <div className="mb-8">
-          <h2 className="section-title mb-4">Awaiting Payment</h2>
+          <h2 className="section-title mb-4">{t('awaitingPayment')}</h2>
           <div className="space-y-3">
             {pendingInvoices.map(inv => (
               <div key={inv.id} className="card p-4 flex items-center justify-between gap-4">
@@ -134,10 +136,10 @@ export default function PaymentsPage() {
                   <div className="flex items-center gap-2 mb-0.5">
                     <p className="font-semibold text-sm text-navy-900">{inv.invoiceNumber}</p>
                     {inv.status === 'overdue' && (
-                      <span className="text-xs text-rose-600 font-semibold bg-rose-50 px-2 py-0.5 rounded-full">Overdue</span>
+                      <span className="text-xs text-rose-600 font-semibold bg-rose-50 px-2 py-0.5 rounded-full">{t('overdue')}</span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-500">{inv.clientName} · Due {formatDate(inv.dueDate)}</p>
+                  <p className="text-xs text-slate-500">{inv.clientName} · {t('due')} {formatDate(inv.dueDate)}</p>
                 </div>
                 <div className="flex items-center gap-4">
                   <p className="text-lg font-bold text-navy-900">{formatCurrency(inv.total)}</p>
@@ -146,7 +148,7 @@ export default function PaymentsPage() {
                       className="btn-primary py-2"
                       onClick={() => handleStartPayment(inv)}
                     >
-                      <IndianRupee size={14} /> Pay Now
+                      <IndianRupee size={14} /> {t('payNow')}
                     </button>
                   )}
                 </div>
@@ -158,21 +160,21 @@ export default function PaymentsPage() {
 
       {/* Transaction History */}
       <div>
-        <h2 className="section-title mb-4">Transaction History</h2>
+        <h2 className="section-title mb-4">{t('transactionHistory')}</h2>
         {payments.length === 0 ? (
-          <div className="card p-8 text-center text-slate-400 text-sm">No transactions yet.</div>
+          <div className="card p-8 text-center text-slate-400 text-sm">{t('noTransactionsYet')}</div>
         ) : (
           <div className="card overflow-hidden">
             <table className="w-full">
               <thead className="bg-slate-50 border-b border-slate-100">
                 <tr>
-                  <th className="table-header text-left">Transaction</th>
-                  <th className="table-header text-left">Client</th>
-                  <th className="table-header text-left">Invoice</th>
-                  <th className="table-header text-left">Method</th>
-                  <th className="table-header text-left">Amount</th>
-                  <th className="table-header text-left">Date</th>
-                  <th className="table-header text-left">Status</th>
+                  <th className="table-header text-left">{t('transaction')}</th>
+                  <th className="table-header text-left">{t('client')}</th>
+                  <th className="table-header text-left">{t('invoice')}</th>
+                  <th className="table-header text-left">{t('method')}</th>
+                  <th className="table-header text-left">{t('amount')}</th>
+                  <th className="table-header text-left">{t('date')}</th>
+                  <th className="table-header text-left">{t('status')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -204,22 +206,22 @@ export default function PaymentsPage() {
                     <td className="table-cell">
                       {payment.status === 'success' && (
                         <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          <CheckCircle size={11} /> Paid
+                          <CheckCircle size={11} /> {t('paid')}
                         </span>
                       )}
                       {payment.status === 'pending' && (
                         <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                          <AlertCircle size={11} /> Pending
+                          <AlertCircle size={11} /> {t('pending')}
                         </span>
                       )}
                       {payment.status === 'failed' && (
                         <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
-                          <XCircle size={11} /> Failed
+                          <XCircle size={11} /> {t('failed')}
                         </span>
                       )}
                       {payment.status === 'partial' && (
                         <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200">
-                          <AlertCircle size={11} /> Partial
+                          <AlertCircle size={11} /> {t('partial')}
                         </span>
                       )}
                       {!['success', 'pending', 'failed', 'partial'].includes(payment.status) && (
@@ -237,17 +239,17 @@ export default function PaymentsPage() {
       </div>
 
       {/* Razorpay Payment Modal */}
-      <Modal open={showRazorpay} onClose={() => { setShowRazorpay(false); setPayStep('method') }} title="Complete Payment" size="sm">
+      <Modal open={showRazorpay} onClose={() => { setShowRazorpay(false); setPayStep('method') }} title={t('completePayment')} size="sm">
         {payStep === 'method' && selectedInvoice && (
           <div className="space-y-4">
             {/* Razorpay branding */}
             <div className="bg-slate-50 rounded-xl p-4 text-center">
-              <p className="text-xs text-slate-500 mb-1">Paying</p>
+              <p className="text-xs text-slate-500 mb-1">{t('paying')}</p>
               <p className="text-2xl font-bold text-navy-900">{formatCurrency(selectedInvoice.total)}</p>
               <p className="text-xs text-slate-400 mt-0.5">{selectedInvoice.invoiceNumber} · {selectedInvoice.clientName}</p>
             </div>
 
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Choose payment method</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('choosePaymentMethod')}</p>
 
             <div className="space-y-2">
               {methods.map(m => (
@@ -282,7 +284,7 @@ export default function PaymentsPage() {
                 <rect x="3" y="11" width="18" height="11" rx="2" stroke="#94a3b8" strokeWidth="2"/>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#94a3b8" strokeWidth="2"/>
               </svg>
-              Secured by Razorpay (Mock Mode)
+              {t('securingRazorpay')}
             </div>
 
             <button
@@ -290,7 +292,7 @@ export default function PaymentsPage() {
               disabled={!selectedMethod}
               onClick={handlePay}
             >
-              Pay {formatCurrency(selectedInvoice.total)}
+              {t('pay')} {formatCurrency(selectedInvoice.total)}
             </button>
           </div>
         )}
@@ -301,8 +303,8 @@ export default function PaymentsPage() {
               style={{ background: 'linear-gradient(135deg, rgba(244,81,30,0.15), rgba(255,140,66,0.15))' }}>
               <div className="w-8 h-8 rounded-full border-4 border-orange-500 border-t-transparent animate-spin" />
             </div>
-            <p className="font-semibold text-navy-900 mb-1">Processing payment...</p>
-            <p className="text-sm text-slate-500">Please wait, do not close this window.</p>
+            <p className="font-semibold text-navy-900 mb-1">{t('paymentProcessing')}</p>
+            <p className="text-sm text-slate-500">{t('pleaseWaitDoNotClose')}</p>
           </div>
         )}
 
@@ -312,14 +314,14 @@ export default function PaymentsPage() {
               style={{ background: 'linear-gradient(135deg, #10B981, #059669)' }}>
               <CheckCircle size={32} className="text-white" />
             </div>
-            <p className="text-xl font-bold text-navy-900 mb-1">Payment Successful!</p>
-            <p className="text-sm text-slate-500 mb-1">{formatCurrency(selectedInvoice.total)} received</p>
-            <p className="text-xs text-slate-400 mb-6">A mock receipt has been generated.</p>
+            <p className="text-xl font-bold text-navy-900 mb-1">{t('paymentSuccessful')}</p>
+            <p className="text-sm text-slate-500 mb-1">{formatCurrency(selectedInvoice.total)} {t('received')}</p>
+            <p className="text-xs text-slate-400 mb-6">{t('paymentReceiptGenerated')}</p>
             <button
               className="btn-primary justify-center w-full cursor-pointer"
               onClick={() => { setShowRazorpay(false); setPayStep('method'); setSelectedInvoice(null); }}
             >
-              Done
+              {t('done')}
             </button>
           </div>
         )}
