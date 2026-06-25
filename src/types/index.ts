@@ -84,7 +84,7 @@ export interface ProjectFile {
   createdAt: string
 }
 
-export type ApprovalStatus = 'pending_review' | 'approved' | 'revision_requested'
+export type ApprovalStatus = 'draft' | 'pending_review' | 'pending_client_approval' | 'pending_admin_approval' | 'approved' | 'rejected' | 'revision_requested' | 'cancelled'
 
 export interface Approval {
   id: string

@@ -62,6 +62,8 @@ app.use('/api/recurring', require('./routes/recurring'))
 app.use('/api/automation', require('./routes/automation'))
 app.use('/api/proposals', require('./routes/proposals'))
 app.use('/api/contracts', require('./routes/contracts'))
+app.use('/api/support', require('./routes/support'))
+app.use('/api/client-proposals', require('./routes/clientProposals'))
 
 // ── Health Check ──────────────────────────────────────────
 app.get('/health', (req, res) => {

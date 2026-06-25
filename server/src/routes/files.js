@@ -71,6 +71,13 @@ router.post('/upload', upload.array('files', 10), async (req, res) => {
     const { projectId, isClientVisible = true, conflictAction, customName, description } = req.body
     const createdFiles = []
 
+    if (req.user.role === 'client') {
+      const project = await Project.findOne({ _id: projectId, clientId: req.user.clientId, deletedAt: null })
+      if (!project) {
+        return res.status(403).json({ error: 'Access denied: project does not belong to client' })
+      }
+    }
+
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'No files uploaded' })
     }
@@ -153,8 +160,8 @@ router.get('/:id', async (req, res) => {
     const file = await File.findById(req.params.id).populate('uploadedBy', 'name')
     if (!file || file.deletedAt) return res.status(404).json({ error: 'File not found' })
 
-    // Check permission for client role
-    if (req.user.role === 'client') {
+    // Check permission for client/client_viewer role
+    if (['client', 'client_viewer'].includes(req.user.role)) {
       if (!file.isClientVisible) return res.status(403).json({ error: 'Access denied' })
       const clientProjects = await Project.find({ clientId: req.user.clientId, deletedAt: null }).select('_id')
       const projectIds = clientProjects.map(p => p._id.toString())
@@ -169,16 +176,42 @@ router.get('/:id', async (req, res) => {
 
 router.get('/:id/download', async (req, res) => {
   try {
-    const file = await File.findByIdAndUpdate(req.params.id, { $inc: { downloadCount: 1 } }, { new: true })
-    if (!file) return res.status(404).json({ error: 'File not found' })
+    const file = await File.findById(req.params.id)
+    if (!file || file.deletedAt) return res.status(404).json({ error: 'File not found' })
+
+    if (['client', 'client_viewer'].includes(req.user.role)) {
+      if (!file.isClientVisible) return res.status(403).json({ error: 'Access denied' })
+      const clientProjects = await Project.find({ clientId: req.user.clientId, deletedAt: null }).select('_id')
+      const projectIds = clientProjects.map(p => p._id.toString())
+      if (!projectIds.includes(file.projectId.toString())) {
+        return res.status(403).json({ error: 'Access denied to this file' })
+      }
+    }
+
+    file.downloadCount = (file.downloadCount || 0) + 1
+    await file.save()
+
     res.json({ downloadUrl: `http://localhost:5000/api/files/download-raw/${file._id}`, expiresIn: 3600 })
   } catch (err) { res.status(500).json({ error: err.message }) }
 })
 
 router.get('/download-raw/:id', async (req, res) => {
   try {
-    const file = await File.findByIdAndUpdate(req.params.id, { $inc: { downloadCount: 1 } }, { new: true })
-    if (!file) return res.status(404).json({ error: 'File not found' })
+    const file = await File.findById(req.params.id)
+    if (!file || file.deletedAt) return res.status(404).json({ error: 'File not found' })
+
+    if (['client', 'client_viewer'].includes(req.user.role)) {
+      if (!file.isClientVisible) return res.status(403).json({ error: 'Access denied' })
+      const clientProjects = await Project.find({ clientId: req.user.clientId, deletedAt: null }).select('_id')
+      const projectIds = clientProjects.map(p => p._id.toString())
+      if (!projectIds.includes(file.projectId.toString())) {
+        return res.status(403).json({ error: 'Access denied to this file' })
+      }
+    }
+
+    file.downloadCount = (file.downloadCount || 0) + 1
+    await file.save()
+
     const filePath = path.join(uploadsDir, file.s3Key)
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ error: 'File not found on disk' })

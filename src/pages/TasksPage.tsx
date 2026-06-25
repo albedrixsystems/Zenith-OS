@@ -6,6 +6,7 @@ import { formatDate } from '../lib/utils'
 import type { TaskStatus } from '../types'
 import api from '../lib/api'
 import { useToast } from '../context/ToastContext'
+import { useLanguage } from '../context/LanguageContext'
 
 const COLUMNS: { id: TaskStatus; label: string; color: string }[] = [
   { id: 'pending', label: 'Pending', color: 'bg-slate-100' },
@@ -16,7 +17,18 @@ const COLUMNS: { id: TaskStatus; label: string; color: string }[] = [
 
 export default function TasksPage() {
   const toast = useToast()
+  const { t } = useLanguage()
   const [showAdd, setShowAdd] = useState(false)
+
+  const getTaskStatusLabel = (status: string) => {
+    switch (status) {
+      case 'pending': return t('taskPending')
+      case 'in_progress': return t('taskInProgress')
+      case 'review': return t('taskReview')
+      case 'done': return t('taskDone')
+      default: return status
+    }
+  }
   const [view, setView] = useState<'kanban' | 'list'>('kanban')
   const [statusFilter, setStatusFilter] = useState<'all' | TaskStatus>('all')
   const [tasks, setTasks] = useState<any[]>([])
@@ -238,25 +250,25 @@ export default function TasksPage() {
   })
 
   return (
-    <Layout title="Tasks">
+    <Layout title={t('tasks')}>
       <div className="page-header flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="page-title">Tasks</h1>
-          <p className="page-subtitle">{tasks.filter(t => t.status !== 'done').length} open · {tasks.filter(t => t.status === 'done').length} done</p>
+          <h1 className="page-title">{t('tasks')}</h1>
+          <p className="page-subtitle">{tasks.filter(t => t.status !== 'done').length} {t('open') || 'open'} · {tasks.filter(t => t.status === 'done').length} {t('completed').toLowerCase()}</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex gap-1 bg-slate-100 rounded-xl p-1">
-            <button onClick={() => setView('kanban')} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${view === 'kanban' ? 'bg-white shadow-sm text-navy-900' : 'text-slate-500'}`}>Kanban</button>
-            <button onClick={() => setView('list')} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${view === 'list' ? 'bg-white shadow-sm text-navy-900' : 'text-slate-500'}`}>List</button>
+            <button onClick={() => setView('kanban')} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${view === 'kanban' ? 'bg-white shadow-sm text-navy-900' : 'text-slate-500'}`}>{t('viewKanban') || 'Kanban'}</button>
+            <button onClick={() => setView('list')} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${view === 'list' ? 'bg-white shadow-sm text-navy-900' : 'text-slate-500'}`}>{t('viewList') || 'List'}</button>
           </div>
           <div className="flex gap-1 bg-slate-100 rounded-xl p-1">
-            <button onClick={() => setStatusFilter('all')} className={`px-3 py-1.5 rounded-lg text-sm font-medium ${statusFilter === 'all' ? 'bg-white text-navy-900 shadow-sm' : 'text-slate-500'}`}>All</button>
-            <button onClick={() => setStatusFilter('pending')} className={`px-3 py-1.5 rounded-lg text-sm font-medium ${statusFilter === 'pending' ? 'bg-white text-navy-900 shadow-sm' : 'text-slate-500'}`}>Pending</button>
-            <button onClick={() => setStatusFilter('in_progress')} className={`px-3 py-1.5 rounded-lg text-sm font-medium ${statusFilter === 'in_progress' ? 'bg-white text-navy-900 shadow-sm' : 'text-slate-500'}`}>In Progress</button>
-            <button onClick={() => setStatusFilter('done')} className={`px-3 py-1.5 rounded-lg text-sm font-medium ${statusFilter === 'done' ? 'bg-white text-navy-900 shadow-sm' : 'text-slate-500'}`}>Done</button>
+            <button onClick={() => setStatusFilter('all')} className={`px-3 py-1.5 rounded-lg text-sm font-medium ${statusFilter === 'all' ? 'bg-white text-navy-900 shadow-sm' : 'text-slate-500'}`}>{t('all')}</button>
+            <button onClick={() => setStatusFilter('pending')} className={`px-3 py-1.5 rounded-lg text-sm font-medium ${statusFilter === 'pending' ? 'bg-white text-navy-900 shadow-sm' : 'text-slate-500'}`}>{t('taskPending')}</button>
+            <button onClick={() => setStatusFilter('in_progress')} className={`px-3 py-1.5 rounded-lg text-sm font-medium ${statusFilter === 'in_progress' ? 'bg-white text-navy-900 shadow-sm' : 'text-slate-500'}`}>{t('taskInProgress')}</button>
+            <button onClick={() => setStatusFilter('done')} className={`px-3 py-1.5 rounded-lg text-sm font-medium ${statusFilter === 'done' ? 'bg-white text-navy-900 shadow-sm' : 'text-slate-500'}`}>{t('taskDone')}</button>
           </div>
           <button className="btn-primary" onClick={() => setShowAdd(true)}>
-            <Plus size={16} /> Add Task
+            <Plus size={16} /> {t('addTask')}
           </button>
         </div>
       </div>
@@ -287,7 +299,7 @@ export default function TasksPage() {
               <div key={col.id} className={`${col.color} rounded-2xl p-3 min-h-[400px]`}>
                 <div className="flex items-center justify-between mb-3 px-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-navy-900">{col.label}</span>
+                    <span className="text-sm font-semibold text-navy-900">{getTaskStatusLabel(col.id)}</span>
                     <span className="w-5 h-5 rounded-full bg-white text-xs font-bold text-slate-600 flex items-center justify-center shadow-sm">
                       {colTasks.length}
                     </span>
@@ -300,8 +312,8 @@ export default function TasksPage() {
                   {colTasks.length === 0 && (
                     <EmptyState
                       icon="📝"
-                      title={`No ${col.label} Tasks`}
-                      description={`There are no tasks currently in ${col.label} status.`}
+                      title={t('noTasksInStatus') || `No ${getTaskStatusLabel(col.id)} Tasks`}
+                      description={t('noTasksInStatus') || `There are no tasks currently in ${getTaskStatusLabel(col.id)} status.`}
                       action={
                         <button
                           onClick={() => {
@@ -310,7 +322,7 @@ export default function TasksPage() {
                           }}
                           className="btn-secondary text-xs py-1.5 px-3 cursor-pointer"
                         >
-                          Create Task
+                          {t('createTask')}
                         </button>
                       }
                     />
@@ -319,7 +331,7 @@ export default function TasksPage() {
                     <div
                       key={task.id}
                       onClick={() => setDetailTask(task)}
-                      className="bg-white rounded-xl p-3.5 shadow-card hover:shadow-card-hover transition-all duration-150 border border-slate-50 cursor-pointer space-y-2.5"
+                      className="bg-white rounded-xl p-3.5 shadow-card hover:shadow-card-hover transition-all duration-150 duration-150 border border-slate-50 cursor-pointer space-y-2.5"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <p className="text-sm font-semibold text-navy-900 leading-snug flex-1">{task.title}</p>
@@ -333,13 +345,13 @@ export default function TasksPage() {
                         <div className="bg-rose-50 border border-rose-100 rounded-lg p-2 flex justify-between items-center text-xs animate-pulse" onClick={e => e.stopPropagation()}>
                           <span className="text-rose-700 font-bold flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping" />
-                            Ticking: {getTickingTime(task.timerStartedAt)}
+                            {t('ticking') || 'Ticking'}: {getTickingTime(task.timerStartedAt)}
                           </span>
                           <button
                             type="button"
                             onClick={(e) => handleStopTimerPrompt(e, task)}
                             className="bg-rose-600 hover:bg-rose-700 text-white rounded p-1"
-                            title="Stop Tracking"
+                            title={t('stopTimer') || "Stop Tracking"}
                           >
                             <Square size={10} fill="white" />
                           </button>
@@ -358,7 +370,7 @@ export default function TasksPage() {
                               type="button"
                               onClick={(e) => handleStartTimer(e, task.id)}
                               className="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-orange-600 transition-colors"
-                              title="Start Tracking"
+                              title={t('startTracking') || "Start Tracking"}
                             >
                               <Play size={12} fill="currentColor" />
                             </button>
@@ -368,16 +380,16 @@ export default function TasksPage() {
                             onChange={(e) => handleUpdateTaskStatus(task.id, e.target.value as any)}
                             className="text-xs bg-slate-55 border border-slate-200 rounded p-1 font-semibold text-slate-700"
                           >
-                            <option value="pending">Pending</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="review">Review</option>
-                            <option value="done">Done</option>
+                            <option value="pending">{t('taskPending')}</option>
+                            <option value="in_progress">{t('taskInProgress')}</option>
+                            <option value="review">{t('taskReview')}</option>
+                            <option value="done">{t('taskDone')}</option>
                           </select>
                         </div>
                       </div>
 
                       <div className="pt-2 border-t border-slate-50 flex justify-between items-center text-[10px] text-slate-400">
-                        <span>Due {formatDate(task.dueDate)}</span>
+                        <span>{t('dueDate')}: {formatDate(task.dueDate)}</span>
                         {task.totalLoggedTime > 0 && (
                           <span className="bg-slate-50 px-1.5 py-0.5 rounded font-mono text-slate-505 font-semibold flex items-center gap-0.5">
                             <Clock size={9} /> {task.totalLoggedTime}m
@@ -412,22 +424,22 @@ export default function TasksPage() {
                 </th>
                 <th className="table-header text-left cursor-pointer hover:bg-slate-100 select-none" onClick={() => handleSort('title')}>
                   <div className="flex items-center gap-1">
-                    <span>Task</span>
+                    <span>{t('tasks')}</span>
                     {sortField === 'title' ? (sortDirection === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />) : <ArrowUpDown size={12} />}
                   </div>
                 </th>
-                <th className="table-header text-left">Assignee</th>
+                <th className="table-header text-left">{t('assignee')}</th>
                 <th className="table-header text-left cursor-pointer hover:bg-slate-100 select-none" onClick={() => handleSort('priority')}>
                   <div className="flex items-center gap-1">
-                    <span>Priority</span>
+                    <span>{t('priority')}</span>
                     {sortField === 'priority' ? (sortDirection === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />) : <ArrowUpDown size={12} />}
                   </div>
                 </th>
-                <th className="table-header text-left">Status</th>
-                <th className="table-header text-left">Change Status</th>
+                <th className="table-header text-left">{t('status')}</th>
+                <th className="table-header text-left">{t('actions')}</th>
                 <th className="table-header text-left cursor-pointer hover:bg-slate-100 select-none" onClick={() => handleSort('dueDate')}>
                   <div className="flex items-center gap-1">
-                    <span>Due Date</span>
+                    <span>{t('dueDate')}</span>
                     {sortField === 'dueDate' ? (sortDirection === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />) : <ArrowUpDown size={12} />}
                   </div>
                 </th>
@@ -501,7 +513,7 @@ export default function TasksPage() {
                           type="button"
                           onClick={(e) => handleStartTimer(e, task.id)}
                           className="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-orange-600 transition-colors"
-                          title="Start Tracking"
+                          title={t('startTracking') || "Start Tracking"}
                         >
                           <Play size={10} fill="currentColor" />
                         </button>
@@ -511,9 +523,9 @@ export default function TasksPage() {
                         onChange={(e) => handleUpdateTaskStatus(task.id, e.target.value as any)}
                         className="text-xs bg-white border border-slate-200 rounded p-1 font-semibold text-slate-700"
                       >
-                        <option value="pending">Pending</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="review">Review</option>
+                        <option value="pending">{t('taskPending')}</option>
+                        <option value="in_progress">{t('taskInProgress')}</option>
+                        <option value="review">{t('taskReview')}</option>
                         <option value="done">Done</option>
                       </select>
                     </div>
@@ -526,10 +538,10 @@ export default function TasksPage() {
         </div>
       )}
 
-      <Modal open={showAdd} onClose={() => { setShowAdd(false); setFormSubmitted(false); }} title="Add New Task">
+      <Modal open={showAdd} onClose={() => { setShowAdd(false); setFormSubmitted(false); }} title={t('addTask')}>
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">Task Title *</label>
+            <label className="block text-xs font-medium text-slate-700 mb-1">{t('taskTitle')} *</label>
             <input
               className={`input ${formSubmitted && !title ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/10' : ''}`}
               placeholder="Logo concept exploration"
@@ -539,13 +551,13 @@ export default function TasksPage() {
             {formSubmitted && !title && <p className="text-[10px] text-rose-500 mt-1">Title is required</p>}
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">Project *</label>
+            <label className="block text-xs font-medium text-slate-700 mb-1">{t('project')} *</label>
             <select
               className={`input ${formSubmitted && !projectId ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/10' : ''}`}
               value={projectId}
               onChange={e => setProjectId(e.target.value)}
             >
-              <option value="">Select project...</option>
+              <option value="">{t('selectProject')}</option>
               {projects.map(p => (
                 <option key={p.id} value={p.id}>{`${p.name} — ${p.clientName}`}</option>
               ))}
@@ -553,27 +565,27 @@ export default function TasksPage() {
             {formSubmitted && !projectId && <p className="text-[10px] text-rose-500 mt-1">Project selection is required</p>}
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">Description</label>
+            <label className="block text-xs font-medium text-slate-700 mb-1">{t('description')}</label>
             <textarea className="input h-20 resize-none text-sm py-2" placeholder="Task details..." value={description} onChange={e => setDescription(e.target.value)} />
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">Priority</label>
+              <label className="block text-xs font-medium text-slate-700 mb-1">{t('priority')}</label>
               <select className="input text-sm py-2" value={priority} onChange={e => setPriority(e.target.value)}>
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="critical">Critical</option>
+                <option value="low">{t('low') || 'Low'}</option>
+                <option value="medium">{t('medium') || 'Medium'}</option>
+                <option value="high">{t('high') || 'High'}</option>
+                <option value="critical">{t('critical') || 'Critical'}</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">Assignee *</label>
+              <label className="block text-xs font-medium text-slate-700 mb-1">{t('assignee')} *</label>
               <select
                 className={`input ${formSubmitted && !assigneeId ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/10' : ''}`}
                 value={assigneeId}
                 onChange={e => setAssigneeId(e.target.value)}
               >
-                <option value="">Select assignee...</option>
+                <option value="">{t('selectAssignee')}</option>
                 {usersList.map(u => (
                   <option key={u.id} value={u.id}>{u.name}</option>
                 ))}
@@ -581,33 +593,33 @@ export default function TasksPage() {
               {formSubmitted && !assigneeId && <p className="text-[10px] text-rose-500 mt-1">Assignee selection is required</p>}
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">Due Date</label>
+              <label className="block text-xs font-medium text-slate-700 mb-1">{t('dueDate')}</label>
               <input type="date" className="input text-sm py-2" value={dueDate} onChange={e => setDueDate(e.target.value)} />
             </div>
           </div>
           <div className="flex gap-3 pt-2">
-            <button className="btn-secondary flex-1" onClick={() => setShowAdd(false)}>Cancel</button>
+            <button className="btn-secondary flex-1" onClick={() => setShowAdd(false)}>{t('cancel')}</button>
             <button className="btn-primary flex-1 justify-center animate-pulse-subtle" onClick={handleCreateTask}>
-              <Plus size={15} /> Add Task
+              <Plus size={15} /> {t('createTask')}
             </button>
           </div>
         </div>
       </Modal>
 
       {/* Task Details and Time Tracking Modal */}
-      <Modal open={!!detailTask} onClose={() => setDetailTask(null)} title="Task details & Time sheet">
+      <Modal open={!!detailTask} onClose={() => setDetailTask(null)} title={t('taskDetails') || "Task details & Time sheet"}>
         {detailTask && (
           <div className="space-y-5">
             <div>
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Title</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('title') || 'Title'}</span>
                 <PriorityBadge priority={detailTask.priority} />
               </div>
               <h3 className="text-base font-bold text-navy-955 mt-1">{detailTask.title}</h3>
             </div>
 
             <div>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Description</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('description')}</span>
               <p className="text-xs text-slate-600 mt-1 bg-slate-50 border border-slate-100 rounded-xl p-3.5 whitespace-pre-line leading-relaxed">
                 {detailTask.description || 'No description provided.'}
               </p>
@@ -615,14 +627,14 @@ export default function TasksPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Assignee</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('assignee')}</span>
                 <div className="flex items-center gap-2 mt-1 bg-slate-55 border border-slate-100 rounded-xl p-2.5">
                   <Avatar name={detailTask.assigneeName} size="sm" />
                   <span className="text-xs font-semibold text-slate-700">{detailTask.assigneeName}</span>
                 </div>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Due Date</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('dueDate')}</span>
                 <div className="flex items-center gap-2 mt-1 bg-slate-55 border border-slate-100 rounded-xl p-2.5">
                   <Calendar size={14} className="text-slate-400" />
                   <span className="text-xs font-semibold text-slate-700">{formatDate(detailTask.dueDate)}</span>
@@ -633,14 +645,14 @@ export default function TasksPage() {
             {/* Time Tracking Widget Section */}
             <div className="border-t border-slate-100 pt-4 space-y-4">
               <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                <Clock size={13} className="text-orange-600" /> Time tracking controls
+                <Clock size={13} className="text-orange-600" /> {t('timeHistory') || 'Time tracking controls'}
               </h4>
               
               <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
-                  <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Logged time summary</span>
-                  <span className="text-lg font-bold text-navy-950 block mt-0.5">
-                    {detailTask.totalLoggedTime || 0} minutes spent
+                  <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('sessionSummary') || 'Logged time summary'}</span>
+                  <span className="text-lg font-bold text-navy-955 block mt-0.5">
+                    {detailTask.totalLoggedTime || 0} {t('minutes') || 'minutes'} {t('completed').toLowerCase()}
                   </span>
                 </div>
                 
@@ -653,7 +665,7 @@ export default function TasksPage() {
                       }}
                       className="btn-primary bg-rose-600 hover:bg-rose-700 text-white text-xs py-2 px-4 flex items-center gap-1.5 cursor-pointer"
                     >
-                      <Square size={12} fill="white" /> Stop timer: {detailTask.timerStartedAt && getTickingTime(detailTask.timerStartedAt)}
+                      <Square size={12} fill="white" /> {t('stopTimer') || 'Stop timer'}: {detailTask.timerStartedAt && getTickingTime(detailTask.timerStartedAt)}
                     </button>
                   ) : (
                     <button
@@ -661,7 +673,7 @@ export default function TasksPage() {
                       onClick={(e) => handleStartTimer(e, detailTask.id)}
                       className="btn-primary bg-emerald-600 hover:bg-emerald-700 text-white text-xs py-2 px-4 flex items-center gap-1.5 cursor-pointer"
                     >
-                      <Play size={12} fill="white" /> Start tracking timer
+                      <Play size={12} fill="white" /> {t('startTracking') || 'Start tracking timer'}
                     </button>
                   )}
                 </div>
@@ -669,12 +681,12 @@ export default function TasksPage() {
 
               {/* Log manual time sheet form */}
               <form onSubmit={handleAddManualTimeLog} className="bg-slate-50/50 border border-slate-100 rounded-2xl p-4 space-y-3">
-                <span className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider">Log manual time sheet</span>
+                <span className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider">{t('manualTimeLog') || 'Log manual time sheet'}</span>
                 <div className="grid grid-cols-3 gap-2">
                   <div className="col-span-1">
                     <input
                       type="number"
-                      placeholder="Minutes"
+                      placeholder={t('minutes') || "Minutes"}
                       className="input py-1.5 text-xs text-center"
                       required
                       value={manualMinutes}
@@ -684,7 +696,7 @@ export default function TasksPage() {
                   <div className="col-span-2">
                     <input
                       type="text"
-                      placeholder="What did you work on?"
+                      placeholder={t('whatWork') || "What did you work on?"}
                       className="input py-1.5 text-xs"
                       required
                       value={manualDesc}
@@ -697,22 +709,22 @@ export default function TasksPage() {
                   disabled={addingTimeLog}
                   className="btn-primary text-xs w-full py-1.5 justify-center cursor-pointer"
                 >
-                  {addingTimeLog ? 'Submitting...' : 'Log Time Sheet Record'}
+                  {addingTimeLog ? 'Submitting...' : t('logTimeSheet')}
                 </button>
               </form>
 
               {/* Time Logs History */}
               <div className="space-y-3">
-                <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Time sheet history logs</span>
+                <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('timeHistory') || 'Time sheet history logs'}</span>
                 {!detailTask.timeLogs || detailTask.timeLogs.length === 0 ? (
-                  <p className="text-[11px] text-slate-400 italic py-1">No time tracking logs saved for this task yet.</p>
+                  <p className="text-[11px] text-slate-400 italic py-1">{t('noTimeHistory')}</p>
                 ) : (
                   <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
                     {detailTask.timeLogs.map((log: any, idx: number) => (
                       <div key={idx} className="border border-slate-150 bg-white rounded-xl p-3 text-[11px] flex justify-between gap-3">
                         <div className="space-y-0.5">
                           <p className="font-semibold text-slate-800">{log.description || 'Task tracking session'}</p>
-                          <p className="text-[10px] text-slate-400">Logged by: {log.userName || 'Staff Member'}</p>
+                          <p className="text-[10px] text-slate-400">{t('loggedBy')}: {log.userName || 'Staff Member'}</p>
                         </div>
                         <div className="text-right space-y-0.5 flex-shrink-0">
                           <span className="badge badge-info bg-blue-50 text-blue-700 font-bold block">{log.durationMinutes}m</span>
@@ -729,11 +741,11 @@ export default function TasksPage() {
       </Modal>
 
       {/* Stop Timer Modal Description Prompt */}
-      <Modal open={!!showStopTimerModal} onClose={() => setShowStopTimerModal(null)} title="Stop Timer & Log Description">
+      <Modal open={!!showStopTimerModal} onClose={() => setShowStopTimerModal(null)} title={t('stopAndLog') || "Stop Timer & Log Description"}>
         <div className="space-y-4">
           <p className="text-xs text-slate-500">Provide a brief summary of the accomplishments completed during this tracking session.</p>
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Session Summary</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">{t('sessionSummary')}</label>
             <input
               type="text"
               placeholder="e.g. Completed initial logo directions"
@@ -743,9 +755,9 @@ export default function TasksPage() {
             />
           </div>
           <div className="flex gap-3 pt-2">
-            <button className="btn-secondary flex-1" onClick={() => setShowStopTimerModal(null)}>Cancel</button>
+            <button className="btn-secondary flex-1" onClick={() => setShowStopTimerModal(null)}>{t('cancel')}</button>
             <button className="btn-primary flex-1 justify-center bg-rose-600 hover:bg-rose-700 cursor-pointer" onClick={handleStopTimerConfirm}>
-              Stop & Log
+              {t('stopAndLog')}
             </button>
           </div>
         </div>
@@ -754,7 +766,7 @@ export default function TasksPage() {
       {/* Bulk Action floating controls */}
       {selectedIds.length > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-4 animate-slide-up border border-slate-800">
-          <span className="text-xs font-semibold">{selectedIds.length} selected</span>
+          <span className="text-xs font-semibold">{selectedIds.length} {t('selected')}</span>
           <div className="w-px h-4 bg-slate-700" />
           <button
             onClick={() => {
@@ -779,7 +791,7 @@ export default function TasksPage() {
             }}
             className="text-xs font-bold text-orange-400 hover:text-orange-300 transition-colors cursor-pointer"
           >
-            Export CSV
+            {t('exportCsv')}
           </button>
           <button
             onClick={() => {
@@ -795,19 +807,19 @@ export default function TasksPage() {
             }}
             className="text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer"
           >
-            Mark Done
+            {t('tasksMarkedDone') || 'Mark Done'}
           </button>
           <button
             onClick={() => setConfirmDeleteOpen(true)}
             className="text-xs font-bold text-rose-400 hover:text-rose-300 transition-colors cursor-pointer"
           >
-            Delete
+            {t('delete')}
           </button>
           <button
             onClick={() => setSelectedIds([])}
             className="text-xs font-bold text-slate-400 hover:text-slate-300 transition-colors cursor-pointer"
           >
-            Cancel
+            {t('cancel')}
           </button>
         </div>
       )}
@@ -815,10 +827,10 @@ export default function TasksPage() {
         open={confirmDeleteOpen}
         onClose={() => setConfirmDeleteOpen(false)}
         onConfirm={handleConfirmDelete}
-        title="Delete Selected Tasks?"
-        message={`Are you sure you want to permanently delete these ${selectedIds.length} selected tasks? This action is destructive and cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t('deleteSelectedTasks') || "Delete Selected Tasks?"}
+        message={t('selectedTasksDeleted') || `Are you sure you want to permanently delete these ${selectedIds.length} selected tasks? This action is destructive and cannot be undone.`}
+        confirmText={t('delete')}
+        cancelText={t('cancel')}
         variant="danger"
       />
     </Layout>

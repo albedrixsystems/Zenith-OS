@@ -22,7 +22,7 @@ router.get('/', async (req, res) => {
     if (status) query.status = status
     if (assigneeId) query.assigneeId = assigneeId
 
-    if (req.user.role === 'client') {
+    if (['client', 'client_viewer'].includes(req.user.role)) {
       const clientProjects = await Project.find({ clientId: req.user.clientId, deletedAt: null }).select('_id')
       const projectIds = clientProjects.map(p => p._id)
       if (projectId) {

@@ -26,16 +26,24 @@ router.get('/', async (req, res) => {
       unpaidInvoices,
       recentActivityLogs,
       allActiveProjects,
-      overdueInvoicesList
+      overdueInvoicesList,
+      pendingClientApprovalsList,
+      pendingInternalApprovalsList,
+      recentlyApprovedList,
+      revisionRequestsList
     ] = await Promise.all([
       Client.countDocuments({ status: 'active', deletedAt: null }),
       Project.countDocuments({ ...clientQuery, status: 'active' }),
-      Approval.countDocuments({ ...approvalQuery, status: 'pending_review' }),
+      Approval.countDocuments({ ...approvalQuery, status: isClient ? 'pending_client_approval' : { $in: ['pending_admin_approval', 'pending_review'] } }),
       Invoice.find({ ...invoiceQuery, status: 'paid' }).select('total paidAt'),
       Invoice.find({ ...invoiceQuery, status: { $in: ['sent', 'overdue'] } }).select('total'),
       ActivityLog.find(activityQuery).populate('userId', 'name').sort({ createdAt: -1 }).limit(10),
       Project.find({ ...clientQuery, status: { $in: ['active', 'review'] } }).sort({ createdAt: -1 }).limit(4),
-      Invoice.find({ ...invoiceQuery, status: 'overdue' }).populate('clientId', 'companyName')
+      Invoice.find({ ...invoiceQuery, status: 'overdue' }).populate('clientId', 'companyName'),
+      Approval.find({ ...approvalQuery, status: 'pending_client_approval' }).populate('projectId', 'name').populate('clientId', 'companyName').populate('requestedBy', 'name').sort({ updatedAt: -1 }).limit(10),
+      Approval.find({ ...approvalQuery, status: { $in: ['pending_admin_approval', 'pending_review'] } }).populate('projectId', 'name').populate('clientId', 'companyName').populate('requestedBy', 'name').sort({ updatedAt: -1 }).limit(10),
+      Approval.find({ ...approvalQuery, status: 'approved' }).populate('projectId', 'name').populate('clientId', 'companyName').populate('requestedBy', 'name').sort({ updatedAt: -1 }).limit(10),
+      Approval.find({ ...approvalQuery, status: 'revision_requested' }).populate('projectId', 'name').populate('clientId', 'companyName').populate('requestedBy', 'name').sort({ updatedAt: -1 }).limit(10)
     ])
 
     // Compute monthly revenue
@@ -139,6 +147,42 @@ router.get('/', async (req, res) => {
       clientGrowth: 20,
       projectGrowth: 12,
       revenueGrowth: 18,
+      pendingClientApprovals: pendingClientApprovalsList.map(a => ({
+        id: a._id,
+        title: a.title,
+        projectName: a.projectId?.name || 'Unknown Project',
+        clientName: a.clientId?.companyName || 'Unknown Client',
+        requestedByName: a.requestedBy?.name || 'Unknown User',
+        status: a.status,
+        updatedAt: a.updatedAt
+      })),
+      pendingInternalApprovals: pendingInternalApprovalsList.map(a => ({
+        id: a._id,
+        title: a.title,
+        projectName: a.projectId?.name || 'Unknown Project',
+        clientName: a.clientId?.companyName || 'Unknown Client',
+        requestedByName: a.requestedBy?.name || 'Unknown User',
+        status: a.status,
+        updatedAt: a.updatedAt
+      })),
+      recentlyApproved: recentlyApprovedList.map(a => ({
+        id: a._id,
+        title: a.title,
+        projectName: a.projectId?.name || 'Unknown Project',
+        clientName: a.clientId?.companyName || 'Unknown Client',
+        requestedByName: a.requestedBy?.name || 'Unknown User',
+        status: a.status,
+        updatedAt: a.updatedAt
+      })),
+      revisionRequests: revisionRequestsList.map(a => ({
+        id: a._id,
+        title: a.title,
+        projectName: a.projectId?.name || 'Unknown Project',
+        clientName: a.clientId?.companyName || 'Unknown Client',
+        requestedByName: a.requestedBy?.name || 'Unknown User',
+        status: a.status,
+        updatedAt: a.updatedAt
+      })),
     })
   } catch (err) { res.status(500).json({ error: err.message }) }
 })

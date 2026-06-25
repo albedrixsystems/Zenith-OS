@@ -19,22 +19,24 @@ const agencyNav = [
   { label: 'Tasks', icon: CheckSquare, to: '/tasks' },
   { label: 'Files', icon: FileText, to: '/files' },
   { label: 'Approvals', icon: ShieldCheck, to: '/approvals' },
-  { label: 'Proposals', icon: FileText, to: '/proposals' },
   { label: 'Contracts', icon: PenTool, to: '/contracts' },
   { label: 'Invoices', icon: Receipt, to: '/invoices' },
   { label: 'Payments', icon: CreditCard, to: '/payments' },
   { label: 'Reports', icon: BarChart3, to: '/reports' },
   { label: 'Activity Log', icon: ClipboardList, to: '/activity' },
+  { label: 'Support Tickets', icon: ClipboardList, to: '/support' },
 ]
 
 const clientNav = [
   { label: 'My Portal', icon: LayoutDashboard, to: '/portal' },
   { label: 'My Projects', icon: FolderOpen, to: '/portal/projects' },
+  { label: 'My Tasks', icon: CheckSquare, to: '/portal/tasks' },
   { label: 'My Files', icon: FileText, to: '/portal/files' },
   { label: 'Approvals', icon: ShieldCheck, to: '/portal/approvals' },
-  { label: 'Proposals', icon: FileText, to: '/portal/proposals' },
   { label: 'Contracts', icon: PenTool, to: '/portal/contracts' },
   { label: 'Invoices', icon: Receipt, to: '/portal/invoices' },
+  { label: 'Support Center', icon: ClipboardList, to: '/portal/support' },
+  { label: 'My Profile', icon: Settings, to: '/portal/profile' },
 ]
 
 export function Sidebar() {
@@ -90,6 +92,10 @@ export function Sidebar() {
       'My Portal': 'dashboard',
       'My Projects': 'projects',
       'My Files': 'files',
+      'My Tasks': 'tasks',
+      'Support Center': 'Support Center',
+      'My Profile': 'settings',
+      'Support Tickets': 'Support Tickets',
     }
     const key = keyMap[label]
     return key ? t(key) : label
@@ -153,6 +159,7 @@ export function Sidebar() {
             <NavLink
               key={item.to}
               to={item.to}
+              end={item.to === '/portal' || item.to === '/dashboard'}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 cursor-pointer
                 ${collapsed ? 'justify-center' : ''}
