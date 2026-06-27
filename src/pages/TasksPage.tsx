@@ -87,7 +87,7 @@ export default function TasksPage() {
 
   useEffect(() => {
     fetchTasks()
-    api.get('/projects?limit=100').then(res => setProjects(res.data.projects || []))
+    api.get('/projects?limit=100').then(res => setProjects(res.data?.projects || []))
     api.get('/auth/users').then(res => setUsersList(res.data || []))
 
     const params = new URLSearchParams(window.location.search)

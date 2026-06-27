@@ -145,7 +145,7 @@ export default function ProjectsPage() {
   const fetchProjects = () => {
     api.get('/projects?limit=100')
       .then(res => {
-        setProjects(res.data.projects)
+        setProjects(res.data?.projects || [])
         setLoading(false)
       })
       .catch(err => {
@@ -156,7 +156,7 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     fetchProjects()
-    api.get('/clients?limit=100').then(res => setClients(res.data.clients || []))
+    api.get('/clients?limit=100').then(res => setClients(res.data?.clients || []))
     api.get('/auth/users').then(res => setUsersList(res.data || []))
   }, [])
 

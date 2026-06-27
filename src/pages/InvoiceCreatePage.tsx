@@ -58,8 +58,8 @@ export default function InvoiceCreatePage() {
           api.get('/clients?limit=100'),
           api.get('/projects?limit=100')
         ])
-        setClients(cRes.data.clients || [])
-        setProjects(pRes.data.projects || [])
+        setClients(cRes.data?.clients || [])
+        setProjects(pRes.data?.projects || [])
       } catch (err: any) {
         toast.error('Failed to load clients and projects: ' + err.message)
       } finally {

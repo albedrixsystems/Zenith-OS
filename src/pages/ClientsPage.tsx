@@ -13,6 +13,33 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { useLanguage } from '../context/LanguageContext'
 
+const safeCopyToClipboard = (text: string, onSuccess: () => void, onError?: () => void) => {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text)
+      .then(onSuccess)
+      .catch((err) => {
+        console.error('Clipboard copy failed: ', err)
+        if (onError) onError()
+      })
+  } else {
+    const textArea = document.createElement('textarea')
+    textArea.value = text
+    textArea.style.position = 'fixed'
+    textArea.style.left = '-9999px'
+    document.body.appendChild(textArea)
+    textArea.focus()
+    textArea.select()
+    try {
+      document.execCommand('copy')
+      onSuccess()
+    } catch (err) {
+      console.error('Fallback copy failed: ', err)
+      if (onError) onError()
+    }
+    document.body.removeChild(textArea)
+  }
+}
+
 export default function ClientsPage() {
   const { user } = useAuth()
   const isAdmin = user?.role === 'super_admin'
@@ -125,16 +152,23 @@ export default function ClientsPage() {
 
   const handleCopyGstin = (e: React.MouseEvent, gstin: string, id: string) => {
     e.stopPropagation()
-    navigator.clipboard.writeText(gstin)
-    setCopiedId(id)
-    toast.info('GSTIN copied to clipboard!')
-    setTimeout(() => setCopiedId(null), 2000)
+    safeCopyToClipboard(
+      gstin,
+      () => {
+        setCopiedId(id)
+        toast.info('GSTIN copied to clipboard!')
+        setTimeout(() => setCopiedId(null), 2000)
+      },
+      () => {
+        toast.error('Failed to copy GSTIN.')
+      }
+    )
   }
 
   const fetchClients = () => {
     api.get('/clients?limit=100')
       .then(res => {
-        setClients(res.data.clients)
+        setClients(res.data?.clients || [])
         setLoading(false)
       })
       .catch(err => {
@@ -151,12 +185,12 @@ export default function ClientsPage() {
     setSelectedClientId(clientId)
     setDetailTab('overview')
     if (clientId) {
-      api.get(`/projects?clientId=${clientId}`).then(res => setClientProjects(res.data.projects || []))
-      api.get(`/invoices?clientId=${clientId}`).then(res => setClientInvoices(res.data.invoices || []))
+      api.get(`/projects?clientId=${clientId}`).then(res => setClientProjects(res.data?.projects || []))
+      api.get(`/invoices?clientId=${clientId}`).then(res => setClientInvoices(res.data?.invoices || []))
       api.get(`/clients/${clientId}/interactions`).then(res => setInteractions(res.data || []))
       api.get(`/clients/${clientId}/emails`).then(res => setSyncedEmails(res.data || []))
       api.get(`/activity`).then(res => {
-        setClientLogs(res.data.logs || [])
+        setClientLogs(res.data?.logs || [])
       })
     } else {
       setClientProjects([])
@@ -491,10 +525,17 @@ export default function ClientsPage() {
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigator.clipboard.writeText(client.pan || '');
-                            setCopiedId('pan-detail');
-                            toast.info('PAN copied to clipboard!');
-                            setTimeout(() => setCopiedId(null), 2000);
+                            safeCopyToClipboard(
+                              client.pan || '',
+                              () => {
+                                setCopiedId('pan-detail');
+                                toast.info('PAN copied to clipboard!');
+                                setTimeout(() => setCopiedId(null), 2000);
+                              },
+                              () => {
+                                toast.error('Failed to copy PAN.');
+                              }
+                            );
                           }}
                           className="btn-ghost p-1 text-blue-700 hover:text-white hover:bg-blue-600 rounded-lg transition-colors cursor-pointer"
                           title="Copy PAN"

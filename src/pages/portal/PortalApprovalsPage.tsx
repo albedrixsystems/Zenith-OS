@@ -72,7 +72,7 @@ export default function PortalApprovalsPage() {
   const fetchProjects = () => {
     api.get('/projects?limit=100')
       .then(res => {
-        setProjects(res.data.projects || [])
+        setProjects(res.data?.projects || [])
       })
       .catch(err => {
         console.error('Failed to load projects', err)

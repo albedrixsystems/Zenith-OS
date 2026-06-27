@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider, useAuth } from './context/AuthContext'
-import { ToastProvider } from './context/ToastContext'
+import { ToastProvider, useToast } from './context/ToastContext'
 
 // Pages
 import LoginPage from './pages/LoginPage'
@@ -32,7 +32,7 @@ import PortalInvoicesPage from './pages/portal/PortalInvoicesPage'
 import PortalSupportPage from './pages/portal/PortalSupportPage'
 import PortalProfilePage from './pages/portal/PortalProfilePage'
 import SupportTicketsPage from './pages/SupportTicketsPage'
-import { LanguageProvider } from './context/LanguageContext'
+import { LanguageProvider, useLanguage } from './context/LanguageContext'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 1000 * 60 * 5 } },
@@ -46,8 +46,47 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 import { useEffect } from 'react'
 
+// Inactivity timeout in milliseconds (e.g., 15 minutes). Set to 0 to disable.
+export const INACTIVITY_TIMEOUT = 15 * 60 * 1000
+
 function AppRoutes() {
-  const { user } = useAuth()
+  const { user, logout, isAuthenticated } = useAuth()
+  const { showToast } = useToast()
+  const { t } = useLanguage()
+
+  useEffect(() => {
+    if (!isAuthenticated || INACTIVITY_TIMEOUT <= 0) return
+
+    let timeoutId: any
+
+    const handleLogout = () => {
+      logout()
+      showToast(t('loggedOutInactivity'), 'warning')
+    }
+
+    const resetTimer = () => {
+      if (timeoutId) clearTimeout(timeoutId)
+      timeoutId = setTimeout(handleLogout, INACTIVITY_TIMEOUT)
+    }
+
+    // Set up listeners for activity
+    const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart']
+    
+    activityEvents.forEach((event) => {
+      window.addEventListener(event, resetTimer)
+    })
+
+    // Initialize timer
+    resetTimer()
+
+    // Clean up
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId)
+      activityEvents.forEach((event) => {
+        window.removeEventListener(event, resetTimer)
+      })
+    }
+  }, [isAuthenticated, logout, showToast, t])
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('zenithos_brand_accent') || 'Orange'

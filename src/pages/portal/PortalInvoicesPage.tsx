@@ -34,8 +34,8 @@ export default function PortalInvoicesPage() {
         api.get('/invoices?limit=100'),
         api.get(`/clients/${user.clientId}`)
       ])
-      setInvoices(invRes.data.invoices || [])
-      setClientDetails(clientRes.data)
+      setInvoices(invRes.data?.invoices || [])
+      setClientDetails(clientRes.data || null)
     } catch (err) {
       console.error('Failed to load invoices', err)
     } finally {
@@ -52,7 +52,7 @@ export default function PortalInvoicesPage() {
     try {
       setSelectedInvoice(inv)
       const res = await api.post('/payments/create-order', { invoiceId: inv.id })
-      setPaymentOrderId(res.data.order.id)
+      setPaymentOrderId(res.data?.order?.id || '')
       setPayStep('method')
       setShowRazorpay(true)
     } catch (err: any) {

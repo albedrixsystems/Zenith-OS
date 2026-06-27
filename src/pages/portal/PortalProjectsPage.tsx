@@ -19,7 +19,7 @@ export default function PortalProjectsPage() {
   const fetchProjects = () => {
     api.get('/projects?limit=100')
       .then(res => {
-        setProjects(res.data.projects || [])
+        setProjects(res.data?.projects || [])
         setLoading(false)
       })
       .catch(err => {

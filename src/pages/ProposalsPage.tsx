@@ -60,8 +60,8 @@ export default function ProposalsPage() {
   useEffect(() => {
     fetchProposals()
     if (isAgency) {
-      api.get('/clients').then(res => setClients(res.data.clients || res.data)).catch(console.error)
-      api.get('/projects').then(res => setProjects(res.data.projects || res.data)).catch(console.error)
+      api.get('/clients').then(res => setClients(res.data?.clients || res.data || [])).catch(console.error)
+      api.get('/projects').then(res => setProjects(res.data?.projects || res.data || [])).catch(console.error)
     }
   }, [isAgency])
 

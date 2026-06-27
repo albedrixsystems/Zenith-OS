@@ -26,10 +26,10 @@ export default function ReportsPage() {
 
       setRevenueData(revRes.data || [])
       setClientPerformance(perfRes.data || [])
-      setClients(clientsRes.data.clients || [])
-      setInvoices(invoicesRes.data.invoices || [])
+      setClients(clientsRes.data?.clients || [])
+      setInvoices(invoicesRes.data?.invoices || [])
 
-      const projList = projectsRes.data.projects || []
+      const projList = projectsRes.data?.projects || []
       setProjectsCount({
         total: projList.length,
         completed: projList.filter((p: any) => p.status === 'completed').length

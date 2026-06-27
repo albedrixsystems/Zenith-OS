@@ -296,6 +296,9 @@ const recurringInvoiceTemplateSchema = new mongoose.Schema({
   taxRate: { type: Number, default: 18 },
   tax: { type: Number, required: true },
   total: { type: Number, required: true },
+  frequency: { type: String, enum: ['weekly', 'monthly', 'quarterly'], default: 'monthly' },
+  nextGenerateDate: { type: Date },
+  notes: String,
 }, { timestamps: true })
 
 // ── Proposal ───────────────────────────────────────

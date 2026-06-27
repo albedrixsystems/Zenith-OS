@@ -62,11 +62,11 @@ export default function ClientPortalPage() {
         api.get(`/clients/${user.clientId}`),
         api.get('/support')
       ])
-      setProjects(projRes.data.projects || [])
+      setProjects(projRes.data?.projects || [])
       setFiles(filesRes.data || [])
       setApprovals(appRes.data || [])
-      setInvoices(invRes.data.invoices || [])
-      setClientDetails(clientRes.data)
+      setInvoices(invRes.data?.invoices || [])
+      setClientDetails(clientRes.data || null)
       setSupportCount(supportRes.data?.filter((t: any) => t.status !== 'closed' && t.status !== 'resolved').length || 0)
     } catch (err) {
       console.error('Failed to load portal data', err)

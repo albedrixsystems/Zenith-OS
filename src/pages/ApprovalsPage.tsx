@@ -59,12 +59,12 @@ export default function ApprovalsPage() {
   const fetchMetaData = () => {
     // Fetch clients
     api.get('/clients?limit=1000')
-      .then(res => setClients(res.data.clients || []))
+      .then(res => setClients(res.data?.clients || []))
       .catch(err => console.error(err))
 
     // Fetch projects
     api.get('/projects?limit=1000')
-      .then(res => setProjects(res.data.projects || []))
+      .then(res => setProjects(res.data?.projects || []))
       .catch(err => console.error(err))
 
     // Fetch users (client portal users and team members)

@@ -99,7 +99,7 @@ export default function FilesPage() {
   useEffect(() => {
     fetchFiles()
     api.get('/projects?limit=100').then(res => {
-      setProjectsList(res.data.projects || [])
+      setProjectsList(res.data?.projects || [])
     })
   }, [])
 

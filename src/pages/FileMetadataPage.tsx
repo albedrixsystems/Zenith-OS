@@ -40,7 +40,7 @@ export default function FileMetadataPage() {
         if (res.data.projectId) {
           api.get(`/projects?limit=100`)
             .then(pRes => {
-              const proj = (pRes.data.projects || []).find((p: any) => p.id === res.data.projectId)
+              const proj = (pRes.data?.projects || []).find((p: any) => p.id === res.data.projectId)
               if (proj) setProject(proj)
             })
             .catch(console.error)

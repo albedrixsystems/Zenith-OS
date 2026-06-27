@@ -37,15 +37,8 @@ const limiter = rateLimit({
 })
 app.use('/api', limiter)
 
-// Auth rate limiter (stricter)
-const authLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: isDev ? 1000 : 10, // 1,000 requests in dev, 10 in production
-  message: { error: 'Too many login attempts. Please try again later.' },
-})
-
 // ── Routes ──────────────────────────────────────────
-app.use('/api/auth', authLimiter, require('./routes/auth'))
+app.use('/api/auth', require('./routes/auth'))
 app.use('/api/clients', require('./routes/clients'))
 app.use('/api/projects', require('./routes/projects'))
 app.use('/api/tasks', require('./routes/tasks'))

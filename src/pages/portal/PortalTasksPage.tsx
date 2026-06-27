@@ -21,7 +21,7 @@ export default function PortalTasksPage() {
         api.get('/projects?limit=100'),
         api.get('/tasks')
       ])
-      setProjects(projectsRes.data.projects || [])
+      setProjects(projectsRes.data?.projects || [])
       setTasks(tasksRes.data || [])
     } catch (err) {
       console.error('Failed to load tasks data', err)

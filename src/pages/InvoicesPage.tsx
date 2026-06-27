@@ -87,7 +87,7 @@ export default function InvoicesPage() {
     setLoading(true)
     api.get('/invoices')
       .then(res => {
-        setInvoices(res.data.invoices || [])
+        setInvoices(res.data?.invoices || [])
         setLoading(false)
       })
       .catch(err => {
@@ -99,8 +99,8 @@ export default function InvoicesPage() {
   useEffect(() => {
     fetchInvoices()
     if (!isClient) {
-      api.get('/clients?limit=100').then(res => setClients(res.data.clients || []))
-      api.get('/projects?limit=100').then(res => setProjects(res.data.projects || []))
+      api.get('/clients?limit=100').then(res => setClients(res.data?.clients || []))
+      api.get('/projects?limit=100').then(res => setProjects(res.data?.projects || []))
       fetchRecurringTemplates()
     }
   }, [isClient])

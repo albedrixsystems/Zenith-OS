@@ -2,8 +2,16 @@ const express = require('express')
 const router = express.Router()
 const jwt = require('jsonwebtoken')
 const crypto = require('crypto')
+const rateLimit = require('express-rate-limit')
 const { User } = require('../models')
 const { authenticate, agencyOnly } = require('../middleware/auth')
+
+const isDev = process.env.NODE_ENV !== 'production'
+const authLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: isDev ? 1000 : 10, // 1,000 requests in dev, 10 in production
+  message: { error: 'Too many login attempts. Please try again later.' },
+})
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_zenith_secret_key'
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'dev_zenith_refresh_key'
@@ -12,7 +20,7 @@ const signToken = (id) => jwt.sign({ id }, JWT_SECRET, { expiresIn: '7d' })
 const signRefresh = (id) => jwt.sign({ id }, JWT_REFRESH_SECRET, { expiresIn: '30d' })
 
 // POST /api/auth/login
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' })
@@ -79,7 +87,7 @@ router.get('/users', authenticate, agencyOnly, async (req, res) => {
 })
 
 // POST /api/auth/forgot-password
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', authLimiter, async (req, res) => {
   try {
     const { email } = req.body
     const user = await User.findOne({ email })
@@ -98,7 +106,7 @@ router.post('/forgot-password', async (req, res) => {
 })
 
 // POST /api/auth/reset-password/:token
-router.post('/reset-password/:token', async (req, res) => {
+router.post('/reset-password/:token', authLimiter, async (req, res) => {
   try {
     const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex')
     const user = await User.findOne({

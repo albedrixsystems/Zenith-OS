@@ -34,7 +34,7 @@ export default function PaymentsPage() {
         api.get('/invoices?limit=100')
       ])
       setPayments(paymentsRes.data || [])
-      setInvoices(invoicesRes.data.invoices || [])
+      setInvoices(invoicesRes.data?.invoices || [])
     } catch (err) {
       console.error(err)
     } finally {
